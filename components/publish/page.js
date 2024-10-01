@@ -8,7 +8,6 @@ export default function Publish() {
     const [searchTerm, setSearchTerm] = useState("");
     const [dataItems, setDataItems] = useState([]);
 
-    // Fetch data from API
     useEffect(() => {
         async function fetchData() {
             try {
@@ -19,10 +18,11 @@ export default function Publish() {
                 const result = await response.json();
 
                 if (result.status) {
-                    const filteredData = result.data.map((item) => ({
+                    const filteredData = result.data.map((item, index) => ({
+                        id: item.id || index, // If item.id doesn't exist, use index as fallback
                         nama_kejadian: item.nama_kejadian,
                         tanggal_kejadian: item.tanggal_kejadian,
-                        city: item.city
+                        city: item.city,
                     }));
                     setDataItems(filteredData);
                 } else {
@@ -35,6 +35,7 @@ export default function Publish() {
 
         fetchData();
     }, []);
+
     const filteredItems = dataItems.filter((item) =>
         item.nama_kejadian?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.city?.toLowerCase().includes(searchTerm.toLowerCase())
