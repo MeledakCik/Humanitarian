@@ -12,20 +12,29 @@ export default function Publish() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await fetch("https://humanitarian1-rz-be-dev1.cnt.id/apid/get_site_report");
+                const response = await fetch('/api/getSitrep/');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
                 const result = await response.json();
+
                 if (result.status) {
-                    setDataItems(result.data || []); // Ensure result.data is an array
+                    const filteredData = result.data.map((item) => ({
+                        nama_kejadian: item.nama_kejadian,
+                        tanggal_kejadian: item.tanggal_kejadian,
+                        city: item.city
+                    }));
+                    setDataItems(filteredData);
                 } else {
-                    console.error("No data available");
+                    console.error("Data tidak tersedia");
                 }
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
         }
+
         fetchData();
     }, []);
-
     const filteredItems = dataItems.filter((item) =>
         item.nama_kejadian?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.city?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -92,19 +101,19 @@ export default function Publish() {
                     ) : (
                         filteredItems.map((item, index) => (
                             <div key={item.id} className="shadow-md mb-4 rounded-[20px]">
-                                <div className="shadow-lg p-4 rounded-[20px] flex items-center">
+                                <div className="shadow-lg rounded-[20px] flex items-center">
                                     <input
                                         type="checkbox"
-                                        className="mr-4 w-[20px] h-[20px] mx-auto"
+                                        className="ml-4 w-[20px] h-[20px] mx-auto"
                                         checked={checkedItemsPublish[index] || false} // Ensure a default value
                                         onChange={() => handleItemChangePublish(index)}
                                     />
-                                    <div className="flex items-center justify-between p-4 border border-gray-300 rounded-lg mb-2">
-                                        <div>
+                                    <div className="flex-1 flex items-center justify-between p-4 rounded-lg">
+                                        <div className="flex flex-col">
                                             <p className="font-bold">{item.nama_kejadian || "N/A"}</p>
-                                            <p>{item.city || "N/A"}</p>
-                                            <p>{item.tanggal_kejadian || "N/A"}</p>
+                                            <p className="mt-2">{item.city || "N/A"}</p>
                                         </div>
+                                        <p className="text-right">{item.tanggal_kejadian || "N/A"}</p>
                                     </div>
                                     <div className="border-l border-orange-500 h-[50px] mx-2"></div>
                                     <button className="text-gray-500 hover:text-gray-800">

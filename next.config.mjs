@@ -1,8 +1,6 @@
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-import withPWA from 'next-pwa';
-
-const pwaConfig = withPWA({
+const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
   skipWaiting: true,
@@ -10,7 +8,15 @@ const pwaConfig = withPWA({
 
 const nextConfig = {
   reactStrictMode: true,
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'https://humanitarian1-rz-be-dev1.cnt.id/apid/:path*',
+      },
+    ];
+  },
   // konfigurasi lain bisa ditambahkan di sini
 };
 
-export default pwaConfig(nextConfig);
+export default withPWA(nextConfig);

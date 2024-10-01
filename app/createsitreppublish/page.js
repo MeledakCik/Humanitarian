@@ -22,26 +22,49 @@ export default function Sitrep() {
     const [isOnline, setIsOnline] = useState(true);
     const [drafts, setDrafts] = useState([]);
     const [publishedEvents, setPublishedEvents] = useState([]);
+    const [provinsiOptions, setProvinsiOptions] = useState([]); // State for province options
 
-    const provinsiOptions = [
-        { value: "provinsi1", label: "Provinsi 1" },
-        { value: "provinsi2", label: "Provinsi 2" },
-    ];
-
+    // Dummy options for other dropdowns (you can replace these with real data later)
     const kotaOptions = [
         { value: "kota1", label: "Kota 1" },
         { value: "kota2", label: "Kota 2" },
     ];
-
     const kecamatanOptions = [
         { value: "kecamatan1", label: "Kecamatan 1" },
         { value: "kecamatan2", label: "Kecamatan 2" },
     ];
-
     const kelurahanOptions = [
         { value: "kelurahan1", label: "Kelurahan 1" },
         { value: "kelurahan2", label: "Kelurahan 2" },
     ];
+
+    useEffect(() => {
+        const fetchProvinsi = async () => {
+            try {
+                const response = await fetch("/api/getProvinsi/");
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                const data = await response.json();
+
+                // Ensure data exists and has a 'data' property
+                if (data && data.status && data.data) {
+                    const options = data.data.map((prov) => ({
+                        value: prov.id, // Use the appropriate property for value
+                        label: prov.prov, // Use 'prov' for the label
+                    }));
+                    setProvinsiOptions(options);
+                } else {
+                    console.error("Invalid data structure:", data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch provinces:", error);
+            }
+        };
+
+        fetchProvinsi();
+    }, []);
+
 
     const handleInputChange = (index, field, value) => {
         const newFormData = [...formData];
@@ -72,14 +95,6 @@ export default function Sitrep() {
         resetForm();
     };
 
-    const handleSave = () => {
-        const updatedDrafts = [...drafts, ...formData];
-        localStorage.setItem("drafts", JSON.stringify(updatedDrafts));
-        setDrafts(updatedDrafts);
-        setMessage("Acara disimpan di Draft!");
-        resetForm();
-    };
-
     const resetForm = () => {
         setFormData([
             {
@@ -95,10 +110,6 @@ export default function Sitrep() {
             },
         ]);
         setCurrentPage(0); // Reset to the first page after saving
-    };
-
-    const checkConnection = () => {
-        setIsOnline(navigator.onLine);
     };
 
     useEffect(() => {
@@ -119,17 +130,10 @@ export default function Sitrep() {
         }
     }, []);
 
-    const nextPage = () => {
-        if (currentPage < formData.length - 1) {
-            setCurrentPage((prev) => prev + 1);
-        }
+    const checkConnection = () => {
+        setIsOnline(navigator.onLine);
     };
 
-    const prevPage = () => {
-        if (currentPage > 0) {
-            setCurrentPage((prev) => prev - 1);
-        }
-    };
     // Custom styling for Select components
     const selectStyles = {
         control: (base) => ({
@@ -282,25 +286,15 @@ export default function Sitrep() {
                         />
                     </div>
 
-                    <div className="flex justify-between">
-                        <Link href="/sitrep" passHref>
-                            <button className="w-[100px] h-[40px] bg-white border border-orange-300 font-bold text-black rounded-lg">
-                                BACK
-                            </button>
-                        </Link>
-                        <button
-                            type="submit"
-                            className={`w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-l`}
-                        >
-                            SAVE
+                    <div className="flex justify-end">
+                        <button type="submit" className="bg-orange-500 text-white py-2 px-4 rounded">
+                            Simpan
                         </button>
-                        <Link href="/damsarpras" passHref>
-                            <button className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg">
-                                NEXT
-                            </button>
-                        </Link>
                     </div>
-                    {message && <p className="mt-4 text-red-500">{message}</p>}
+
+                    {message && (
+                        <p className="mt-4 text-center text-green-500">{message}</p>
+                    )}
                 </form>
             </div>
         </div>
