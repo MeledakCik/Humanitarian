@@ -17,123 +17,127 @@ export default function Sitrep() {
             address: "",
         },
     ]);
-    const [currentPage, setCurrentPage] = useState(0); // Track the current page
+    const [currentPage, setCurrentPage] = useState(0);
     const [message, setMessage] = useState("");
     const [isOnline, setIsOnline] = useState(true);
     const [drafts, setDrafts] = useState([]);
     const [publishedEvents, setPublishedEvents] = useState([]);
-    const [provinsiOptions, setProvinsiOptions] = useState([]); // State for province options
-    const [kotaOptions, setKotaOptions] = useState([]); // State for city options
-    const [kecamatanOptions, setKecamatanOptions] = useState([]); // State for sub-district options
-    const [kelurahanOptions, setKelurahanOptions] = useState([]); // State for village options
+    const [provinsiOptions, setProvinsiOptions] = useState([]);
+    const [kotaOptions, setKotaOptions] = useState([]);
+    const [kecamatanOptions, setKecamatanOptions] = useState([]);
+    const [kelurahanOptions, setKelurahanOptions] = useState([]);
 
     useEffect(() => {
         const fetchProvinsi = async () => {
             try {
                 const response = await fetch("/api/getProvinsi/");
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
-                }
+                if (!response.ok) throw new Error("Failed to fetch provinces");
                 const data = await response.json();
-
-                // Ensure data exists and has a 'data' property
                 if (data && data.status && data.data) {
                     const options = data.data.map((prov) => ({
-                        value: prov.id, // Use the appropriate property for value
-                        label: prov.prov, // Use 'prov' for the label
+                        value: prov.id,
+                        label: prov.prov,
                     }));
                     setProvinsiOptions(options);
-                } else {
-                    console.error("Invalid data structure:", data);
                 }
             } catch (error) {
-                console.error("Failed to fetch provinces:", error);
+                console.error(error);
             }
         };
-
         fetchProvinsi();
     }, []);
 
+    // Fetch Kota berdasarkan Provinsi yang dipilih
     useEffect(() => {
-        const fetchKota = async () => {
-            try {
-                const response = await fetch("/api/getKota/");
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
-                }
-                const data = await response.json();
+        console.log("Provinsi changed:", formData[currentPage]?.provinsi);
 
-                // Ensure data exists and has a 'data' property
-                if (data && data.status && data.data) {
-                    const options = data.data.map((kota) => ({
-                        value: kota.id, // Use the appropriate property for value
-                        label: kota.city, // Use 'city' for the label
-                    }));
-                    setKotaOptions(options);
-                } else {
-                    console.error("Invalid data structure:", data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch cities:", error);
-            }
-        };
+        if (formData[currentPage]?.provinsi) {
+            const fetchKota = async () => {
+                try {
+                    const response = await fetch(`/api/getKota?province_id=${formData[currentPage].provinsi}`);
+                    if (!response.ok) throw new Error("Failed to fetch cities");
 
-        fetchKota();
-    }, []);
+                    const data = await response.json();
+                    console.log("Data yang diterima dari API:", data);
+
+                    // Access the inner data array correctly
+                    if (Array.isArray(data.data.data)) { // Adjusted here
+                        const options = data.data.data.map((kota) => ({
+                            value: kota.id,
+                            label: kota.city,
+                        }));
+                        setKotaOptions(options);
+                    } else {
+                        console.error("Expected an array, but got:", data.data);
+                    }
+                } catch (error) {
+                    console.error("Error fetching kota:", error);
+                }
+            };
+            fetchKota();
+        }
+    }, [formData[currentPage]?.provinsi]);
+
 
     useEffect(() => {
-        const fetchKecamatan = async () => {
-            try {
-                const response = await fetch("/api/getKecamatan/");
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
+        console.log("Kota changed:", formData[currentPage]?.kota);
+
+        if (formData[currentPage]?.kota) {
+            const fetchKecamatan = async () => { // Renamed to fetchKecamatan for clarity
+                try {
+                    const response = await fetch(`/api/getKecamatan?city_id=${formData[currentPage].kota}`);
+                    if (!response.ok) throw new Error("Failed to fetch kecamatan");
+
+                    const data = await response.json();
+                    console.log("Data yang diterima dari API:", data);
+
+                    // Check for the expected structure of the data
+                    if (Array.isArray(data.data.data)) {
+                        const options = data.data.data.map((kecamatan) => ({
+                            value: kecamatan.id,
+                            label: kecamatan.district,
+                        }));
+                        setKotaOptions(options); // This should probably be setKecamatanOptions
+                    } else {
+                        console.error("Expected an array, but got:", data.data);
+                    }
+                } catch (error) {
+                    console.error("Error fetching kecamatan:", error);
                 }
-                const data = await response.json();
+            };
+            fetchKecamatan();
+        }
+    }, [formData[currentPage]?.kota]);
 
-                // Ensure data exists and has a 'data' property
-                if (data && data.status && data.data) {
-                    const options = data.data.map((kecamatan) => ({
-                        value: kecamatan.id, // Use the appropriate property for value
-                        label: kecamatan.district, // Use 'district' for the label
-                    }));
-                    setKecamatanOptions(options);
-                } else {
-                    console.error("Invalid data structure:", data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch sub-districts:", error);
-            }
-        };
 
-        fetchKecamatan();
-    }, []);
-
+    // Memanggil API untuk mendapatkan kelurahan berdasarkan ID kecamatan yang dipilih
     useEffect(() => {
         const fetchKelurahan = async () => {
-            try {
-                const response = await fetch("/api/getKelurahan/");
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
-                }
-                const data = await response.json();
+            if (formData[currentPage].kecamatan) {
+                try {
+                    const response = await fetch(`/api/getKelurahan/?district_id=${formData[currentPage].kecamatan}`);
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    const data = await response.json();
 
-                // Ensure data exists and has a 'data' property
-                if (data && data.status && data.data) {
-                    const options = data.data.map((kelurahan) => ({
-                        value: kelurahan.id, // Use the appropriate property for value
-                        label: kelurahan.subdistrict, // Use 'kelurahan' for the label
-                    }));
-                    setKelurahanOptions(options);
-                } else {
-                    console.error("Invalid data structure:", data);
+                    if (data && data.status && data.data) {
+                        const options = data.data.map((kelurahan) => ({
+                            value: kelurahan.id,
+                            label: kelurahan.subdistrict,
+                        }));
+                        setKelurahanOptions(options);
+                    } else {
+                        console.error("Invalid data structure:", data);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch villages:", error);
                 }
-            } catch (error) {
-                console.error("Failed to fetch villages:", error);
             }
         };
-
         fetchKelurahan();
-    }, []);
+    }, [formData[currentPage].kecamatan]);
+
 
 
 
