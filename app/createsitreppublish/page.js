@@ -23,20 +23,9 @@ export default function Sitrep() {
     const [drafts, setDrafts] = useState([]);
     const [publishedEvents, setPublishedEvents] = useState([]);
     const [provinsiOptions, setProvinsiOptions] = useState([]); // State for province options
-
-    // Dummy options for other dropdowns (you can replace these with real data later)
-    const kotaOptions = [
-        { value: "kota1", label: "Kota 1" },
-        { value: "kota2", label: "Kota 2" },
-    ];
-    const kecamatanOptions = [
-        { value: "kecamatan1", label: "Kecamatan 1" },
-        { value: "kecamatan2", label: "Kecamatan 2" },
-    ];
-    const kelurahanOptions = [
-        { value: "kelurahan1", label: "Kelurahan 1" },
-        { value: "kelurahan2", label: "Kelurahan 2" },
-    ];
+    const [kotaOptions, setKotaOptions] = useState([]); // State for city options
+    const [kecamatanOptions, setKecamatanOptions] = useState([]); // State for sub-district options
+    const [kelurahanOptions, setKelurahanOptions] = useState([]); // State for village options
 
     useEffect(() => {
         const fetchProvinsi = async () => {
@@ -64,6 +53,88 @@ export default function Sitrep() {
 
         fetchProvinsi();
     }, []);
+
+    useEffect(() => {
+        const fetchKota = async () => {
+            try {
+                const response = await fetch("/api/getKota/");
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                const data = await response.json();
+
+                // Ensure data exists and has a 'data' property
+                if (data && data.status && data.data) {
+                    const options = data.data.map((kota) => ({
+                        value: kota.id, // Use the appropriate property for value
+                        label: kota.city, // Use 'city' for the label
+                    }));
+                    setKotaOptions(options);
+                } else {
+                    console.error("Invalid data structure:", data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch cities:", error);
+            }
+        };
+
+        fetchKota();
+    }, []);
+
+    useEffect(() => {
+        const fetchKecamatan = async () => {
+            try {
+                const response = await fetch("/api/getKecamatan/");
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                const data = await response.json();
+
+                // Ensure data exists and has a 'data' property
+                if (data && data.status && data.data) {
+                    const options = data.data.map((kecamatan) => ({
+                        value: kecamatan.id, // Use the appropriate property for value
+                        label: kecamatan.district, // Use 'district' for the label
+                    }));
+                    setKecamatanOptions(options);
+                } else {
+                    console.error("Invalid data structure:", data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch sub-districts:", error);
+            }
+        };
+
+        fetchKecamatan();
+    }, []);
+
+    useEffect(() => {
+        const fetchKelurahan = async () => {
+            try {
+                const response = await fetch("/api/getKelurahan/");
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                const data = await response.json();
+
+                // Ensure data exists and has a 'data' property
+                if (data && data.status && data.data) {
+                    const options = data.data.map((kelurahan) => ({
+                        value: kelurahan.id, // Use the appropriate property for value
+                        label: kelurahan.subdistrict, // Use 'kelurahan' for the label
+                    }));
+                    setKelurahanOptions(options);
+                } else {
+                    console.error("Invalid data structure:", data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch villages:", error);
+            }
+        };
+
+        fetchKelurahan();
+    }, []);
+
 
 
     const handleInputChange = (index, field, value) => {
@@ -164,7 +235,6 @@ export default function Sitrep() {
                     </p>
                 </div>
             </nav>
-
             <div className="flex flex-col w-full max-w-full">
                 <form
                     className="bg-white p-6 rounded shadow-md w-full"
@@ -216,8 +286,7 @@ export default function Sitrep() {
                         />
 
                         <p className="mb-2">Provinsi*</p>
-                        <Select
-                            name="provinsi"
+                        <Select name="provinsi"
                             value={provinsiOptions.find(
                                 (option) => option.value === formData[currentPage].provinsi
                             )}
@@ -226,7 +295,7 @@ export default function Sitrep() {
                             }
                             options={provinsiOptions}
                             styles={selectStyles}
-                            className=" mb-2"
+                            className="mb-2"
                             placeholder="Pilih Provinsi"
                         />
                         <p className="mb-2">Kota*</p>
@@ -240,7 +309,7 @@ export default function Sitrep() {
                             }
                             options={kotaOptions}
                             styles={selectStyles}
-                            className=" mb-2"
+                            className="mb-2"
                             placeholder="Pilih Kota"
                         />
 
@@ -255,7 +324,7 @@ export default function Sitrep() {
                             }
                             options={kecamatanOptions}
                             styles={selectStyles}
-                            className=" mb-2"
+                            className="mb-2"
                             placeholder="Pilih Kecamatan"
                         />
 
@@ -270,9 +339,10 @@ export default function Sitrep() {
                             }
                             options={kelurahanOptions}
                             styles={selectStyles}
-                            className=" mb-2"
+                            className="mb-2"
                             placeholder="Pilih Kelurahan"
                         />
+
 
                         <p className="mb-2">Alamat</p>
                         <input
@@ -287,7 +357,10 @@ export default function Sitrep() {
                     </div>
 
                     <div className="flex justify-end">
-                        <button type="submit" className="bg-orange-500 text-white py-2 px-4 rounded">
+                        <button
+                            type="submit"
+                            className="bg-orange-500 text-white py-2 px-4 rounded"
+                        >
                             Simpan
                         </button>
                     </div>
