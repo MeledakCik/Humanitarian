@@ -102,23 +102,25 @@ export default function Publish() {
                     ) : (
                         filteredItems.map((item, index) => (
                             <div key={item.id} className="shadow-md mb-4 rounded-[20px]">
-                                <div className="shadow-lg rounded-[20px] flex items-center">
+                                <div className="shadow-lg p-4 rounded-[20px] flex items-center">
                                     <input
                                         type="checkbox"
-                                        className="ml-4 w-[20px] h-[20px] mx-auto"
+                                        className="mr-4 w-[20px] h-[20px] mx-auto"
                                         checked={checkedItemsPublish[index] || false} // Ensure a default value
                                         onChange={() => handleItemChangePublish(index)}
                                     />
-                                    <div className="flex-1 flex items-center justify-between p-4 rounded-lg">
-                                        <div className="flex flex-col">
+                                    <div className="flex-grow flex flex-col justify-between">
+                                        <div className="flex justify-between items-center">
                                             <p className="font-bold">{item.nama_kejadian || "N/A"}</p>
-                                            <p className="mt-2">{item.city || "N/A"}</p>
+                                            <p className="text-right">{item.tanggal_kejadian || "N/A"}</p>
                                         </div>
-                                        <p className="text-right">{item.tanggal_kejadian || "N/A"}</p>
+                                        <div className="flex justify-between items-center">
+                                            <p className="mt-2 text-gray-700">{item.city || "N/A"}</p>
+                                        </div>
                                     </div>
                                     <div className="border-l border-orange-500 h-[50px] mx-2"></div>
                                     <button className="text-gray-500 hover:text-gray-800">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-[40px] h-[40px]">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-[35px] h-[35px]">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16.862 3.487a2.121 2.121 0 013.004 0l1.586 1.586a2.121 2.121 0 010 3.004l-1.586 1.586-4.588-4.588 1.586-1.586zM2 17.25V22h4.75l9.74-9.739-4.588-4.588L2 17.25z" />
                                         </svg>
                                     </button>

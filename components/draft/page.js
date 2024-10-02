@@ -163,7 +163,7 @@ export default function Draft() {
                                             <p className="font-bold">{item.eventName}</p>
                                             <p className="text-gray-600">{item.date}</p>
                                         </div>
-                                        <div className="flex justify-between items-center">
+                                        <div className="flex justify-between mt-2 items-center">
                                             <p className="text-gray-700">{item.eventType}</p>
                                             <p className="text-gray-700">{item.pic}</p>
                                         </div>
@@ -174,7 +174,6 @@ export default function Draft() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16.862 3.487a2.121 2.121 0 013.004 0l1.586 1.586a2.121 2.121 0 010 3.004l-1.586 1.586-4.588-4.588 1.586-1.586zM2 17.25V22h4.75l9.74-9.739-4.588-4.588L2 17.25z" />
                                         </svg>
                                     </button>
-                                    <div className="border-l border-orange-500 h-[50px] mx-2"></div>
                                     <button className="text-red-500 hover:text-red-700" onClick={() => handleDeleteClick(index)}>
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-[35px] h-[35px]">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
