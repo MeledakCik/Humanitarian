@@ -1,58 +1,43 @@
 export async function GET(req) {
     try {
-        const response = await fetch('https://humanitarian1-rz-be-dev1.cnt.id/apid/get_kelurahan');
+        const { searchParams } = new URL(req.url);
+        const kecamatanId = searchParams.get('district_id');
+        console.log("district_id received in route:", kecamatanId); // Log the received district_id
 
+        // Check if district_id (kecamatanId) is provided
+        if (!kecamatanId) {
+            return new Response(JSON.stringify({ message: 'Kecamatan ID tidak tersedia' }), {
+                status: 400,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+        }
+
+        // Fetch kelurahan data from external API using kecamatanId (district_id)
+        const response = await fetch(`https://humanitarian1-rz-be-dev1.cnt.id/apid/get_kelurahan?district_id=${kecamatanId}`);
         if (!response.ok) {
-            console.error(`HTTP error! status: ${response.status}`);
-            return new Response(JSON.stringify({ message: 'Error fetching data from external API' }), {
-                status: response.status,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            throw new Error('Error fetching kelurahan data');
         }
 
-        const text = await response.text(); // Get the raw response as text
-        console.log("Raw response from API:", text); // Log the raw response
+        const data = await response.json();
+        console.log("Data kelurahan yang diterima dari API:", data); // Log the received data for debugging
 
-        // Try parsing the response as JSON
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch (jsonError) {
-            console.error("Error parsing JSON:", jsonError);
-            return new Response(JSON.stringify({ message: 'Error parsing data from external API' }), {
-                status: 500,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-        }
-
-        console.log("Data yang diterima dari API:", data);
-        if (data && data.status) {
-            return new Response(JSON.stringify(data), {
-                status: 200,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-        } else {
-            console.error("Data tidak tersedia:", data);
-            return new Response(JSON.stringify({ message: 'Data tidak tersedia' }), {
-                status: 404,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-        }
+        // Return the data in a proper structure
+        return new Response(JSON.stringify({ status: true, data }), {
+            status: 200,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
     } catch (error) {
-        console.error("Error fetching data:", error); // Log the error for debugging
-        return new Response(JSON.stringify({ message: 'Internal Server Error' }), {
+        // Log the error and return a proper error response
+        console.error("Error fetching kelurahan:", error);
+        return new Response(JSON.stringify({ message: 'Error fetching data' }), {
             status: 500,
             headers: {
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+            },
         });
     }
 }

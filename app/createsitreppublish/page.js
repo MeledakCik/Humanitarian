@@ -26,6 +26,49 @@ export default function Sitrep() {
     const [kotaOptions, setKotaOptions] = useState([]);
     const [kecamatanOptions, setKecamatanOptions] = useState([]);
     const [kelurahanOptions, setKelurahanOptions] = useState([]);
+    const [jenis_kejadianOptions, setJenis_kejadianOptions] = useState([]);
+    const [pic_lapanganOptions, setPic_lapanganOptions] = useState([]);
+    useEffect(() => {
+        const fetchJenis_kejadian = async () => {
+            try {
+                const response = await fetch("/api/getJenis_kejadian/");
+                if (!response.ok) throw new Error("Failed to fetch provinces");
+                const data = await response.json();
+                if (data && data.status && data.data) {
+                    const options = data.data.map((jenis_kejadian) => ({
+                        value: jenis_kejadian.id,
+                        label: jenis_kejadian.jenis_kejadian,
+                    }));
+                    setJenis_kejadianOptions(options);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        fetchJenis_kejadian();
+    }, []);
+
+
+    useEffect(() => {
+        const fetchPic_lapangan = async () => {
+            try {
+                const response = await fetch("/api/getPic_lapangan/");
+                if (!response.ok) throw new Error("Failed to fetch provinces");
+                const data = await response.json();
+                if (data && data.status && data.data) {
+                    const options = data.data.map((pic_lapangan) => ({
+                        value: pic_lapangan.id,
+                        label: pic_lapangan.pic,
+                    }));
+                    setPic_lapanganOptions(options);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        fetchPic_lapangan();
+    }, []);
+
 
     useEffect(() => {
         const fetchProvinsi = async () => {
@@ -80,24 +123,64 @@ export default function Sitrep() {
 
 
     useEffect(() => {
-        console.log("Kota changed:", formData[currentPage]?.kota);
+    console.log("Kota changed:", formData[currentPage]?.kota);
 
-        if (formData[currentPage]?.kota) {
-            const fetchKecamatan = async () => { // Renamed to fetchKecamatan for clarity
+    if (formData[currentPage]?.kota) {
+        const fetchKecamatan = async () => { // Renamed to fetchKecamatan for clarity
+            try {
+                const response = await fetch(`/api/getKecamatan?city_id=${formData[currentPage].kota}`);
+                
+                // Periksa apakah response berhasil
+                if (!response.ok) throw new Error("Failed to fetch kecamatan");
+
+                const data = await response.json();
+                console.log("Data yang diterima dari API:", data);
+
+                // Cek apakah data berbentuk array
+                if (Array.isArray(data.data?.data)) {
+                    const options = data.data.data.map((kecamatan) => ({
+                        value: kecamatan.id,
+                        label: kecamatan.district,
+                    }));
+                    
+                    setKecamatanOptions(options); // Pastikan state diubah dengan benar
+                } else {
+                    console.error("Expected an array, but got:", data.data);
+                }
+            } catch (error) {
+                console.error("Error fetching kecamatan:", error);
+            }
+        };
+
+        fetchKecamatan(); // Panggil fungsi untuk mengambil kecamatan
+    }
+}, [formData[currentPage]?.kota]);
+
+
+
+    // Memanggil API untuk mendapatkan kelurahan berdasarkan ID kecamatan yang dipilih
+    useEffect(() => {
+        console.log("kelurahan changed:", formData[currentPage]?.kecamatan);
+    
+        if (formData[currentPage]?.kecamatan) {
+            const fetchkelurahan = async () => { // Renamed to fetchKecamatan for clarity
                 try {
-                    const response = await fetch(`/api/getKecamatan?city_id=${formData[currentPage].kota}`);
+                    const response = await fetch(`/api/getKelurahan?district_id=${formData[currentPage].kecamatan}`);
+                    
+                    // Periksa apakah response berhasil
                     if (!response.ok) throw new Error("Failed to fetch kecamatan");
-
+    
                     const data = await response.json();
                     console.log("Data yang diterima dari API:", data);
-
-                    // Check for the expected structure of the data
-                    if (Array.isArray(data.data.data)) {
-                        const options = data.data.data.map((kecamatan) => ({
-                            value: kecamatan.id,
-                            label: kecamatan.district,
+    
+                    // Cek apakah data berbentuk array
+                    if (Array.isArray(data.data?.data)) {
+                        const options = data.data.data.map((kelurahan) => ({
+                            value: kelurahan.id,
+                            label: kelurahan.kel,
                         }));
-                        setKotaOptions(options); // This should probably be setKecamatanOptions
+                        
+                        setKelurahanOptions(options); // Pastikan state diubah dengan benar
                     } else {
                         console.error("Expected an array, but got:", data.data);
                     }
@@ -105,41 +188,11 @@ export default function Sitrep() {
                     console.error("Error fetching kecamatan:", error);
                 }
             };
-            fetchKecamatan();
+    
+            fetchkelurahan(); // Panggil fungsi untuk mengambil kecamatan
         }
-    }, [formData[currentPage]?.kota]);
-
-
-    // Memanggil API untuk mendapatkan kelurahan berdasarkan ID kecamatan yang dipilih
-    useEffect(() => {
-        const fetchKelurahan = async () => {
-            if (formData[currentPage].kecamatan) {
-                try {
-                    const response = await fetch(`/api/getKelurahan/?district_id=${formData[currentPage].kecamatan}`);
-                    if (!response.ok) {
-                        throw new Error("Network response was not ok");
-                    }
-                    const data = await response.json();
-
-                    if (data && data.status && data.data) {
-                        const options = data.data.map((kelurahan) => ({
-                            value: kelurahan.id,
-                            label: kelurahan.subdistrict,
-                        }));
-                        setKelurahanOptions(options);
-                    } else {
-                        console.error("Invalid data structure:", data);
-                    }
-                } catch (error) {
-                    console.error("Failed to fetch villages:", error);
-                }
-            }
-        };
-        fetchKelurahan();
-    }, [formData[currentPage].kecamatan]);
-
-
-
+    }, [formData[currentPage]?.kecamatan]);
+    
 
     const handleInputChange = (index, field, value) => {
         const newFormData = [...formData];
@@ -255,16 +308,18 @@ export default function Sitrep() {
                             className="border rounded w-full py-2 px-3 mb-2"
                             required
                         />
-                        <p className="mb-2">Jenis Kejadian</p>
-                        <input
-                            type="text"
-                            placeholder="Jenis Kejadian"
-                            value={formData[currentPage].eventType}
-                            onChange={(e) =>
-                                handleInputChange(currentPage, "eventType", e.target.value)
+                        <p className="mb-2">Jenis Kejadian*</p>
+                        <Select name="jenis_kejadian"
+                            value={jenis_kejadianOptions.find(
+                                (option) => option.value === formData[currentPage].jenis_kejadian
+                            )}
+                            onChange={(option) =>
+                                handleSelectChange(currentPage, "jenis_kejadian", option.value)
                             }
-                            className="border rounded w-full py-2 px-3 mb-2"
-                            required
+                            options={jenis_kejadianOptions}
+                            styles={selectStyles}
+                            className="mb-2"
+                            placeholder="Pilih Jenis Kejadian"
                         />
                         <p className="mb-2">Nama Kejadian</p>
                         <input
@@ -277,16 +332,18 @@ export default function Sitrep() {
                             className="border rounded w-full py-2 px-3 mb-2"
                             required
                         />
-                        <p className="mb-2">PIC Lapangan</p>
-                        <input
-                            type="text"
-                            placeholder="PIC Lapangan"
-                            value={formData[currentPage].pic}
-                            onChange={(e) =>
-                                handleInputChange(currentPage, "pic", e.target.value)
+                       <p className="mb-2">Pic Lapangan*</p>
+                        <Select name="Pic Lapangan"
+                            value={pic_lapanganOptions.find(
+                                (option) => option.value === formData[currentPage].pic_lapangan
+                            )}
+                            onChange={(option) =>
+                                handleSelectChange(currentPage, "pic_lapangan", option.value)
                             }
-                            className="border rounded w-full py-2 px-3 mb-2"
-                            required
+                            options={pic_lapanganOptions}
+                            styles={selectStyles}
+                            className="mb-2"
+                            placeholder="Pilih Pic Lapangan"
                         />
 
                         <p className="mb-2">Provinsi*</p>
