@@ -123,63 +123,63 @@ export default function Sitrep() {
 
 
     useEffect(() => {
-    console.log("Kota changed:", formData[currentPage]?.kota);
+        console.log("Kota changed:", formData[currentPage]?.kota);
 
-    if (formData[currentPage]?.kota) {
-        const fetchKecamatan = async () => { // Renamed to fetchKecamatan for clarity
-            try {
-                const response = await fetch(`/api/getKecamatan?city_id=${formData[currentPage].kota}`);
-                
-                // Periksa apakah response berhasil
-                if (!response.ok) throw new Error("Failed to fetch kecamatan");
+        if (formData[currentPage]?.kota) {
+            const fetchKecamatan = async () => { // Renamed to fetchKecamatan for clarity
+                try {
+                    const response = await fetch(`/api/getKecamatan?city_id=${formData[currentPage].kota}`);
 
-                const data = await response.json();
-                console.log("Data yang diterima dari API:", data);
+                    // Periksa apakah response berhasil
+                    if (!response.ok) throw new Error("Failed to fetch kecamatan");
 
-                // Cek apakah data berbentuk array
-                if (Array.isArray(data.data?.data)) {
-                    const options = data.data.data.map((kecamatan) => ({
-                        value: kecamatan.id,
-                        label: kecamatan.district,
-                    }));
-                    
-                    setKecamatanOptions(options); // Pastikan state diubah dengan benar
-                } else {
-                    console.error("Expected an array, but got:", data.data);
+                    const data = await response.json();
+                    console.log("Data yang diterima dari API:", data);
+
+                    // Cek apakah data berbentuk array
+                    if (Array.isArray(data.data?.data)) {
+                        const options = data.data.data.map((kecamatan) => ({
+                            value: kecamatan.id,
+                            label: kecamatan.district,
+                        }));
+
+                        setKecamatanOptions(options); // Pastikan state diubah dengan benar
+                    } else {
+                        console.error("Expected an array, but got:", data.data);
+                    }
+                } catch (error) {
+                    console.error("Error fetching kecamatan:", error);
                 }
-            } catch (error) {
-                console.error("Error fetching kecamatan:", error);
-            }
-        };
+            };
 
-        fetchKecamatan(); // Panggil fungsi untuk mengambil kecamatan
-    }
-}, [formData[currentPage]?.kota]);
+            fetchKecamatan(); // Panggil fungsi untuk mengambil kecamatan
+        }
+    }, [formData[currentPage]?.kota]);
 
 
 
     // Memanggil API untuk mendapatkan kelurahan berdasarkan ID kecamatan yang dipilih
     useEffect(() => {
         console.log("kelurahan changed:", formData[currentPage]?.kecamatan);
-    
+
         if (formData[currentPage]?.kecamatan) {
             const fetchkelurahan = async () => { // Renamed to fetchKecamatan for clarity
                 try {
                     const response = await fetch(`/api/getKelurahan?district_id=${formData[currentPage].kecamatan}`);
-                    
+
                     // Periksa apakah response berhasil
                     if (!response.ok) throw new Error("Failed to fetch kecamatan");
-    
+
                     const data = await response.json();
                     console.log("Data yang diterima dari API:", data);
-    
+
                     // Cek apakah data berbentuk array
                     if (Array.isArray(data.data?.data)) {
                         const options = data.data.data.map((kelurahan) => ({
                             value: kelurahan.id,
                             label: kelurahan.kel,
                         }));
-                        
+
                         setKelurahanOptions(options); // Pastikan state diubah dengan benar
                     } else {
                         console.error("Expected an array, but got:", data.data);
@@ -188,11 +188,11 @@ export default function Sitrep() {
                     console.error("Error fetching kecamatan:", error);
                 }
             };
-    
+
             fetchkelurahan(); // Panggil fungsi untuk mengambil kecamatan
         }
     }, [formData[currentPage]?.kecamatan]);
-    
+
 
     const handleInputChange = (index, field, value) => {
         const newFormData = [...formData];
@@ -305,7 +305,7 @@ export default function Sitrep() {
                             onChange={(e) =>
                                 handleInputChange(currentPage, "date", e.target.value)
                             }
-                            className="border rounded w-full py-2 px-3 mb-2"
+                            className="border rounded w-full text-gray-400 py-2 px-3 mb-2"
                             required
                         />
                         <p className="mb-2">Jenis Kejadian*</p>
@@ -332,7 +332,7 @@ export default function Sitrep() {
                             className="border rounded w-full py-2 px-3 mb-2"
                             required
                         />
-                       <p className="mb-2">Pic Lapangan*</p>
+                        <p className="mb-2">Pic Lapangan*</p>
                         <Select name="Pic Lapangan"
                             value={pic_lapanganOptions.find(
                                 (option) => option.value === formData[currentPage].pic_lapangan
@@ -416,16 +416,30 @@ export default function Sitrep() {
                             className="border rounded w-full py-2 px-3 mb-2"
                         />
                     </div>
-
-                    <div className="flex justify-end">
+                    <div className="flex flex-row justify-between">
+                        <a href="./sitrep">
+                            <button
+                                type="button"
+                                className="bg-white border border-orange-500 font-bold text-black py-2 px-6 rounded"
+                            >
+                                BACK
+                            </button>
+                        </a>
                         <button
                             type="submit"
-                            className="bg-orange-500 text-white py-2 px-4 rounded"
+                            className="bg-orange-500 text-white py-2 px-6 font-bold rounded"
                         >
-                            Simpan
+                            SAVE
                         </button>
+                        <a href="./damsarpras">
+                            <button
+                                type="button"
+                                className="bg-orange-500 text-white py-2 px-6 font-bold rounded"
+                            >
+                                NEXT
+                            </button>
+                        </a>
                     </div>
-
                     {message && (
                         <p className="mt-4 text-center text-green-500">{message}</p>
                     )}

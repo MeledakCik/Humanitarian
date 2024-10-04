@@ -4,71 +4,155 @@ import Link from "next/link";
 import Select from "react-select";
 
 export default function Sitrep() {
-  const [formData, setFormData] = useState([
-    {
-      spk: "",
-      date: "",
-      jenisKejadian: "",
-      eventName: "",
-      namaPIC: "",
-      jumlahPenerima: "",
-      jumlahRelawan: "",
-      provinsi: "",
-      kota: "",
-      kecamatan: "",
-      kelurahan: "",
-      address: "",
-    },
-  ]);
+  const initialFormData = {
+    spk: "",
+    date: "",
+    jenisKejadian: "",
+    eventName: "",
+    namaPIC: "",
+    jumlahPenerima: "",
+    jumlahRelawan: "",
+    provinsi: "",
+    kota: "",
+    kecamatan: "",
+    kelurahan: "",
+    address: "",
+  };
+
+  const [formData, setFormData] = useState([initialFormData]);
   const [currentPage, setCurrentPage] = useState(0);
   const [message, setMessage] = useState("");
   const [isOnline, setIsOnline] = useState(true);
   const [activeMenu, setActiveMenu] = useState("draft");
   const [drafts, setDrafts] = useState([]);
   const [publishedEvents, setPublishedEvents] = useState([]);
+  const [provinsiOptions, setProvinsiOptions] = useState([]);
+  const [kotaOptions, setKotaOptions] = useState([]);
+  const [kecamatanOptions, setKecamatanOptions] = useState([]);
+  const [kelurahanOptions, setKelurahanOptions] = useState([]);
+  const [jenis_kejadianOptions, setJenisKejadianOptions] = useState([]);
+  const [pic_lapanganOptions, setPicLapanganOptions] = useState([]);
 
-  const provinsiOptions = [
-    { value: "provinsi1", label: "Provinsi 1" },
-    { value: "provinsi2", label: "Provinsi 2" },
-  ];
+  // Fetching options from API
+  useEffect(() => {
+    const fetchData = async (url, setOptions, mapData) => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Failed to fetch data");
+        const data = await response.json();
+        if (data?.status && data?.data) {
+          setOptions(data.data.map(mapData));
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
-  const kotaOptions = [
-    { value: "kota1", label: "Kota 1" },
-    { value: "kota2", label: "Kota 2" },
-  ];
+    fetchData("/api/getJenis_kejadian", setJenisKejadianOptions, (item) => ({
+      value: item.id,
+      label: item.jenis_kejadian,
+    }));
 
-  const kecamatanOptions = [
-    { value: "kecamatan1", label: "Kecamatan 1" },
-    { value: "kecamatan2", label: "Kecamatan 2" },
-  ];
+    fetchData("/api/getPic_lapangan", setPicLapanganOptions, (item) => ({
+      value: item.id,
+      label: item.pic,
+    }));
 
-  const kelurahanOptions = [
-    { value: "kelurahan1", label: "Kelurahan 1" },
-    { value: "kelurahan2", label: "Kelurahan 2" },
-  ];
+    fetchData("/api/getProvinsi", setProvinsiOptions, (item) => ({
+      value: item.id,
+      label: item.prov,
+    }));
+  }, []);
 
-  const kejadianOptions = [
-    { value: "kejadian1", label: "Kejadian 1" },
-    { value: "kejadian2", label: "Kejadian 2" },
-  ];
+  // Fetching dependent data (Kota, Kecamatan, Kelurahan)
+  useEffect(() => {
+    if (formData[currentPage]?.provinsi) {
+      fetchKota(formData[currentPage].provinsi);
+    }
+  }, [formData[currentPage]?.provinsi]);
+
+  useEffect(() => {
+    if (formData[currentPage]?.kota) {
+      fetchKecamatan(formData[currentPage].kota);
+    }
+  }, [formData[currentPage]?.kota]);
+
+  useEffect(() => {
+    if (formData[currentPage]?.kecamatan) {
+      fetchKelurahan(formData[currentPage].kecamatan);
+    }
+  }, [formData[currentPage]?.kecamatan]);
+
+  const fetchKota = async (provinsiId) => {
+    try {
+      const response = await fetch(`/api/getKota?province_id=${provinsiId}`);
+      const data = await response.json();
+      if (Array.isArray(data.data?.data)) {
+        setKotaOptions(
+          data.data.data.map((item) => ({
+            value: item.id,
+            label: item.city,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching kota:", error);
+    }
+  };
+
+  const fetchKecamatan = async (kotaId) => {
+    try {
+      const response = await fetch(`/api/getKecamatan?city_id=${kotaId}`);
+      const data = await response.json();
+      if (Array.isArray(data.data?.data)) {
+        setKecamatanOptions(
+          data.data.data.map((item) => ({
+            value: item.id,
+            label: item.district,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching kecamatan:", error);
+    }
+  };
+
+  const fetchKelurahan = async (kecamatanId) => {
+    try {
+      const response = await fetch(`/api/getKelurahan?district_id=${kecamatanId}`);
+      const data = await response.json();
+      if (Array.isArray(data.data?.data)) {
+        setKelurahanOptions(
+          data.data.data.map((item) => ({
+            value: item.id,
+            label: item.kel,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching kelurahan:", error);
+    }
+  };
+
+  // Input Handlers
   const handleInputChange = (index, field, value) => {
-    const newFormData = [...formData];
-    newFormData[index][field] = value;
-    setFormData(newFormData);
+    const updatedData = [...formData];
+    updatedData[index][field] = value;
+    setFormData(updatedData);
   };
 
   const handleSelectChange = (index, field, value) => {
-    const newFormData = [...formData];
-    newFormData[index][field] = value;
-    setFormData(newFormData);
+    const updatedData = [...formData];
+    updatedData[index][field] = value;
+    setFormData(updatedData);
   };
 
+  // Form Submit and Save
   const handleSubmit = (e) => {
     e.preventDefault();
     if (activeMenu === "publish" && isOnline) {
       setPublishedEvents((prev) => [...prev, ...formData]);
       setMessage("Acara dipublikasikan!");
-      console.log("Acara yang dipublikasikan:", formData);
     } else if (activeMenu === "draft") {
       const updatedDrafts = [...drafts, ...formData];
       localStorage.setItem("drafts", JSON.stringify(updatedDrafts));
@@ -80,73 +164,16 @@ export default function Sitrep() {
     resetForm();
   };
 
-  const handleSave = () => {
-    const updatedDrafts = [...drafts, ...formData];
-    localStorage.setItem("drafts", JSON.stringify(updatedDrafts));
-    setDrafts(updatedDrafts);
-    setMessage("Acara disimpan di Draft!");
-    resetForm();
-  };
-
   const resetForm = () => {
-    setFormData([
-      {
-        spk: "",
-        date: "",
-        jenisKejadian: "",
-        eventName: "",
-        namaPIC: "",
-        jumlahPenerima: "",
-        jumlahRelawan: "",
-        provinsi: "",
-        kota: "",
-        kecamatan: "",
-        kelurahan: "",
-        address: "",
-      },
-    ]);
+    setFormData([initialFormData]);
     setCurrentPage(0);
-  };
-
-  const checkConnection = () => {
-    setIsOnline(navigator.onLine);
-  };
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setIsOnline(navigator.onLine);
-      window.addEventListener("online", checkConnection);
-      window.addEventListener("offline", checkConnection);
-
-      const storedDrafts = localStorage.getItem("drafts");
-      if (storedDrafts) {
-        setDrafts(JSON.parse(storedDrafts));
-      }
-
-      return () => {
-        window.removeEventListener("online", checkConnection);
-        window.removeEventListener("offline", checkConnection);
-      };
-    }
-  }, []);
-
-  const nextPage = () => {
-    if (currentPage < formData.length - 1) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prev) => prev - 1);
-    }
   };
 
   const selectStyles = {
     control: (base) => ({
       ...base,
       padding: "5px",
-      borderColor: "#30 41 59",
+      borderColor: "#E5E7EB",
       borderRadius: "5px",
       fontSize: "14px",
       width: "100%",
@@ -196,23 +223,21 @@ export default function Sitrep() {
               onChange={(e) =>
                 handleInputChange(currentPage, "date", e.target.value)
               }
-              className="border rounded w-full py-2 px-3 mb-2"
+              className="border rounded text-gray-400 w-full py-2 px-3 mb-2"
               required
             />
             <p className="mb-2">Jenis Kejadian</p>
-            <Select
-              name="jenisKejadian"
-              value={kejadianOptions.find(
-                (option) =>
-                  option.value === formData[currentPage].jenisKejadian
+            <Select name="jenis_kejadian"
+              value={jenis_kejadianOptions.find(
+                (option) => option.value === formData[currentPage].jenis_kejadian
               )}
               onChange={(option) =>
-                handleSelectChange(currentPage, "jenisKejadian", option.value)
+                handleSelectChange(currentPage, "jenis_kejadian", option.value)
               }
-              options={kejadianOptions}
+              options={jenis_kejadianOptions}
               styles={selectStyles}
-              className=" mb-2"
-              placeholder="Pilih jenis kejadian"
+              className="mb-2"
+              placeholder="Pilih Jenis Kejadian"
             />
             <p className="mb-2">Nama Kejadian*</p>
             <input
@@ -226,18 +251,17 @@ export default function Sitrep() {
               required
             />
             <p className="mb-2">Nama PIC</p>
-            <Select
-              name="namaPIC"
-              value={kecamatanOptions.find(
-                (option) => option.value === formData[currentPage].namaPIC
+            <Select name="Pic Lapangan"
+              value={pic_lapanganOptions.find(
+                (option) => option.value === formData[currentPage].pic_lapangan
               )}
               onChange={(option) =>
-                handleSelectChange(currentPage, "namaPIC", option.value)
+                handleSelectChange(currentPage, "pic_lapangan", option.value)
               }
-              options={kecamatanOptions}
+              options={pic_lapanganOptions}
               styles={selectStyles}
-              className=" mb-2"
-              placeholder="Pilih PIC"
+              className="mb-2"
+              placeholder="Pilih Pic Lapangan"
             />
             <p className="mb-2">Jumlah Penerima Manfaat</p>
             <input
@@ -265,8 +289,7 @@ export default function Sitrep() {
             />
 
             <p className="mb-2">Provinsi*</p>
-            <Select
-              name="provinsi"
+            <Select name="provinsi"
               value={provinsiOptions.find(
                 (option) => option.value === formData[currentPage].provinsi
               )}
@@ -275,10 +298,9 @@ export default function Sitrep() {
               }
               options={provinsiOptions}
               styles={selectStyles}
-              className=" mb-2"
+              className="mb-2"
               placeholder="Pilih Provinsi"
             />
-
             <p className="mb-2">Kota*</p>
             <Select
               name="kota"
@@ -290,7 +312,7 @@ export default function Sitrep() {
               }
               options={kotaOptions}
               styles={selectStyles}
-              className=" mb-2"
+              className="mb-2"
               placeholder="Pilih Kota"
             />
 
@@ -305,7 +327,7 @@ export default function Sitrep() {
               }
               options={kecamatanOptions}
               styles={selectStyles}
-              className=" mb-2"
+              className="mb-2"
               placeholder="Pilih Kecamatan"
             />
 
@@ -320,7 +342,7 @@ export default function Sitrep() {
               }
               options={kelurahanOptions}
               styles={selectStyles}
-              className=" mb-2"
+              className="mb-2"
               placeholder="Pilih Kelurahan"
             />
 
@@ -338,7 +360,7 @@ export default function Sitrep() {
 
           <div className="flex justify-between">
             <Link href="/sitrep" passHref>
-              <button className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg">
+              <button className="w-[100px] h-[40px] border border-orange-500 bg-white font-bold text-black rounded-lg">
                 BACK
               </button>
             </Link>
