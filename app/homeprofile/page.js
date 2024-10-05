@@ -35,7 +35,7 @@ export default function Home() {
     return (
         <div className="flex flex-col items-center min-h-screen bg-gray-100">
             {/* Navbar */}
-            <nav className="w-full bg-orange-400 p-4">
+            <nav className="w-full bg-[#ff6b00] p-6">
                 <div className="flex justify-center">
                     <p className="text-white font-bold text-[22px]">WELCOME TO HUMANITARIAN</p>
                 </div>

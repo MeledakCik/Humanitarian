@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import Link from 'next/link';
 
 export default function Publish() {
-    const [selectAllPublish, setSelectAllPublish] = useState(false);
     const [checkedItemsPublish, setCheckedItemsPublish] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [dataItems, setDataItems] = useState([]);
@@ -41,12 +40,6 @@ export default function Publish() {
         item.city?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleSelectAllPublishChange = () => {
-        const newSelectAll = !selectAllPublish;
-        setSelectAllPublish(newSelectAll);
-        setCheckedItemsPublish(Array(filteredItems.length).fill(newSelectAll));
-    };
-
     const handleItemChangePublish = (index) => {
         const newCheckedItems = [...checkedItemsPublish];
         newCheckedItems[index] = !newCheckedItems[index];
@@ -83,17 +76,6 @@ export default function Publish() {
 
             {/* Checkbox "Select All" */}
             <div className="bg-white min-h-full">
-                <div className="flex items-center mb-4">
-                    <input
-                        type="checkbox"
-                        className="mr-2 w-[20px] h-[20px]"
-                        checked={selectAllPublish}
-                        onChange={handleSelectAllPublishChange}
-                    />
-                    <label className="text-gray-700">Select All</label>
-                </div>
-
-                {/* Display filtered data */}
                 <div className="relative w-full min-h-full">
                     {filteredItems.length === 0 ? (
                         <div className="text-gray-500">
@@ -103,12 +85,6 @@ export default function Publish() {
                         filteredItems.map((item, index) => (
                             <div key={item.id} className="shadow-md mb-4 rounded-[20px]">
                                 <div className="shadow-lg p-4 rounded-[20px] flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        className="mr-4 w-[20px] h-[20px] mx-auto"
-                                        checked={checkedItemsPublish[index] || false} // Ensure a default value
-                                        onChange={() => handleItemChangePublish(index)}
-                                    />
                                     <div className="flex-grow flex flex-col justify-between">
                                         <div className="flex justify-between items-center">
                                             <p className="font-bold">{item.nama_kejadian || "N/A"}</p>

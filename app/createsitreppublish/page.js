@@ -285,9 +285,9 @@ export default function Sitrep() {
 
     return (
         <div className="flex flex-col items-center min-h-screen bg-gray-100">
-            <nav className="w-full bg-orange-400 p-4">
+            <nav className="w-full bg-[#ff6b00] p-6 ">
                 <div className="flex justify-center">
-                    <p className="text-white text-semibold text-[16px]">
+                    <p className="text-white text-bold text-[16px]">
                         PUBLISH ENTRY REPORT
                     </p>
                 </div>
