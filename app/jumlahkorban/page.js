@@ -1,14 +1,45 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from 'next/link'; // Import Link untuk navigasi
 
 export default function Sitrep() {
     const [showForm, setShowForm] = useState(false);
+    const [isLoading, setIsLoading] = useState(true); // Tambahkan state untuk loading
     const [formData, setFormData] = useState({
         jumlah: '',
         jeniskorbanjiwa: '',
     });
     const [savedData, setSavedData] = useState([]); // State untuk menyimpan semua data yang diinput
+
+    // Mengambil data saat komponen pertama kali dimuat
+    useEffect(() => {
+        async function fetchData() {
+            setIsLoading(true); // Set loading menjadi true saat mulai mengambil data
+            try {
+                const response = await fetch('/api/getJumlah_korban/');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const result = await response.json();
+
+                if (result.status) {
+                    const fetchedData = result.data.map((item) => ({
+                        jumlah: item.jumlah, // Ambil data jumlah
+                        jeniskorbanjiwa: item.jenis_korban_jiwa, // Ambil data jenis korban jiwa
+                    }));
+                    setSavedData(fetchedData); // Simpan data ke savedData
+                } else {
+                    console.error("Data tidak tersedia");
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setIsLoading(false); // Set loading menjadi false setelah selesai
+            }
+        }
+
+        fetchData();
+    }, []);  // Hanya dijalankan saat komponen pertama kali dimuat
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -21,7 +52,7 @@ export default function Sitrep() {
     const handleSave = () => {
         // Menyimpan data ke array savedData
         setSavedData([...savedData, formData]);
-        setFormData({ jumlah: '', jeniskorbanjiwa: ''}); // Reset form setelah save
+        setFormData({ jumlah: '', jeniskorbanjiwa: '' }); // Reset form setelah save
         setShowForm(false); // Menyembunyikan form setelah save
     };
 

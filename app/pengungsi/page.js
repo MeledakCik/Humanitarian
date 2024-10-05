@@ -1,9 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from 'next/link'; // Import Link untuk navigasi
 
 export default function Sitrep() {
     const [showForm, setShowForm] = useState(false);
+    const [isLoading, setIsLoading] = useState(true); // Menambahkan state loading
     const [formData, setFormData] = useState({
         jumlah: '',
         lokasipengungsian: '',
@@ -21,13 +22,42 @@ export default function Sitrep() {
     const handleSave = () => {
         // Menyimpan data ke array savedData
         setSavedData([...savedData, formData]);
-        setFormData({ jumlah: '', lokasipengungsian: ''}); // Reset form setelah save
+        setFormData({ jumlah: '', lokasipengungsian: '' }); // Reset form setelah save
         setShowForm(false); // Menyembunyikan form setelah save
     };
 
     const handleBack = () => {
         setShowForm(false); // Menyembunyikan form tanpa save
     };
+
+    // Mengambil data dari API
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/getPengungsian/');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const result = await response.json();
+
+                if (result.status) {
+                    const fetchedData = result.data.map((item) => ({
+                        jumlah: item.jumlah, // Ambil data jumlah
+                        lokasipengungsian: item.lokasi_pengungsian, // Ambil data kecamatan
+                    }));
+                    setSavedData(fetchedData); // Simpan data ke savedData
+                } else {
+                    console.error("Data tidak tersedia");
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setIsLoading(false); // Set loading menjadi false setelah selesai
+            }
+        }
+
+        fetchData();
+    }, []); // Kosong array dependency untuk hanya memanggil sekali
 
     return (
         <>
@@ -38,114 +68,123 @@ export default function Sitrep() {
                     </div>
                 </nav>
                 <div className="w-full relative min-h-full bg-white">
-                    <div className="flex items-center justify-center mt-[20px]">
-                        <button
-                            className="w-[325px] h-[50px] bg-[#8bff7f] rounded-lg text-[13px] flex items-center justify-center"
-                            onClick={() => setShowForm(!showForm)} // Toggle form saat button ditekan
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                className="w-[24px] h-[24px] mr-2 font-bold text-[#57636C]"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M12 4v16m8-8H4"
-                                />
-                            </svg>
-                            <span className="font-bold font-[700] text-[#57636C]">
-                                {showForm ? "Tutup Data" : "Tambahkan Data"}
-                            </span>
-                        </button>
-                    </div>
-
-                    {showForm && (
-                        <div className="mt-[10px] p-7 bg-white rounded-lg">
-                            <div className="mb-4">
-                                <label className="block text-[14px] font-bold text-gray-700">Lokasi Pengungsian*</label>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        name="lokasipengungsian"
-                                        value={formData.lokasipengungsian}
-                                        onChange={handleInputChange}
-                                        className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
-                                    />
-                                </div>
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-[14px] font-bold text-gray-700">Jumlah*</label>
-                                <div className="relative">
-                                    <input
-                                        type="number"
-                                        name="jumlah"
-                                        value={formData.jumlah}
-                                        onChange={handleInputChange}
-                                        className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex justify-between">
-                                <Link href="/jumlahkorban" passHref>
-                                    <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
-                                        BACK
-                                    </button>
-                                </Link>
-                                <button
-                                    onClick={handleSave}
-                                    className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg"
-                                >
-                                    SAVE
-                                </button>
-                                <Link href="/kebutuhanmendesak" passHref>
-                                    <button className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg">
-                                        NEXT
-                                    </button>
-                                </Link>
-                            </div>
+                    {isLoading ? ( // Menampilkan loader saat loading
+                        <div className="flex justify-center mt-5">
+                            <p>Loading...</p>
                         </div>
-                    )}
+                    ) : (
+                        <>
+                            <div className="flex items-center justify-center mt-[20px]">
+                                <button
+                                    className="w-[325px] h-[50px] bg-[#8bff7f] rounded-lg text-[13px] flex items-center justify-center"
+                                    onClick={() => setShowForm(!showForm)} // Toggle form saat button ditekan
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        className="w-[24px] h-[24px] mr-2 font-bold text-[#57636C]"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M12 4v16m8-8H4"
+                                        />
+                                    </svg>
+                                    <span className="font-bold font-[700] text-[#57636C]">
+                                        {showForm ? "Tutup Data" : "Tambahkan Data"}
+                                    </span>
+                                </button>
+                            </div>
 
-                    <div className="mt-[20px] p-4">
-                        {savedData.map((data, index) => (
-                            <div
-                                key={index}
-                                className="mb-4 p-4 bg-white border border-orange-500 rounded-lg shadow-md"
-                            >
-                                <div className="flex justify-between">
-                                    <div className="w-1/2">
-                                        <p className="font-bold text-gray-700 text-md">Lokasi Pengungsian</p>
-                                        <p className="text-gray-800">{data.lokasipengungsian}</p>
+                            {showForm && (
+                                <div className="mt-[10px] p-7 bg-white rounded-lg">
+                                    <div className="mb-4">
+                                        <label className="block text-[14px] font-bold text-gray-700">Lokasi Pengungsian*</label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                name="lokasipengungsian"
+                                                value={formData.lokasipengungsian}
+                                                onChange={handleInputChange}
+                                                className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="w-1/2">
-                                        <p className="font-bold text-gray-700 text-md">Jumlah</p>
-                                        <p className="text-gray-800">{data.jumlah}</p>
+                                    <div className="mb-4">
+                                        <label className="block text-[14px] font-bold text-gray-700">Jumlah*</label>
+                                        <div className="relative">
+                                            <input
+                                                type="number"
+                                                name="jumlah"
+                                                value={formData.jumlah}
+                                                onChange={handleInputChange}
+                                                className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="flex">
-                                        <button className="mr-4 text-blue-500 hover:text-blue-700">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
-                                            </svg>
-                                            Edit
+
+                                    <div className="flex justify-between">
+                                        <Link href="/jumlahkorban" passHref>
+                                            <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
+                                                BACK
+                                            </button>
+                                        </Link>
+                                        <button
+                                            onClick={handleSave}
+                                            className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg"
+                                        >
+                                            SAVE
                                         </button>
-                                        <button className="text-red-500 hover:text-red-700">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M10 3h4a1 1 0 011 1v1H9V4a1 1 0 011-1z" />
-                                            </svg>
-                                            Hapus
-                                        </button>
+                                        <Link href="/kebutuhanmendesak" passHref>
+                                            <button className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg">
+                                                NEXT
+                                            </button>
+                                        </Link>
                                     </div>
                                 </div>
+                            )}
+
+                            <div className="mt-[20px] p-4">
+                                {savedData.map((data, index) => (
+                                    <div
+                                        key={index}
+                                        className="mb-4 p-4 bg-white border border-orange-500 rounded-lg shadow-md"
+                                    >
+                                        <div className="flex justify-between">
+                                            <div className="w-1/2">
+                                                <p className="font-bold text-gray-700 text-md">Lokasi Pengungsian</p>
+                                                <p className="text-gray-800">{data.lokasipengungsian}</p>
+                                            </div>
+                                            <div className="w-1/2">
+                                                <p className="font-bold text-gray-700 text-md">Jumlah</p>
+                                                <p className="text-gray-800">{data.jumlah}</p>
+                                            </div>
+                                            <div className="flex">
+                                                <button className="mr-4 text-blue-500 hover:text-blue-700">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
+                                                    </svg>
+                                                    Edit
+                                                </button>
+                                                <button className="text-red-500 hover:text-red-700">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M10 3h4a1 1 0 011 1v1H9V4a1 1 0 011-1z" />
+                                                    </svg>
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
+                        </>
+                    )}
                 </div>
             </div>
         </>
     );
 }
+ 

@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import Link from 'next/link'; // Import Link untuk navigasi
+import { useState, useEffect } from "react";
+import Link from 'next/link';
 
 export default function Sitrep() {
     const [showForm, setShowForm] = useState(false);
@@ -10,6 +10,38 @@ export default function Sitrep() {
         satuan: '',
     });
     const [savedData, setSavedData] = useState([]); // State untuk menyimpan semua data yang diinput
+    const [isLoading, setIsLoading] = useState(true); // State untuk loading status
+
+    // useEffect untuk fetch data dari API saat pertama kali render
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/getDampak_sarpras/');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const result = await response.json();
+
+                if (result.status) {
+                    const fetchedData = result.data.map((item) => ({
+                        id: item.id,  // Pastikan ada ID unik untuk setiap item
+                        jumlah: item.jumlah,
+                        kerusakan: item.kerusakan,
+                        satuan: item.satuan
+                    }));
+                    setSavedData(fetchedData);
+                } else {
+                    console.error("Data tidak tersedia");
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setIsLoading(false); // Matikan loading setelah data diambil
+            }
+        }
+
+        fetchData();
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -20,14 +52,14 @@ export default function Sitrep() {
     };
 
     const handleSave = () => {
-        // Menyimpan data ke array savedData
+        // Simpan data ke array savedData
         setSavedData([...savedData, formData]);
         setFormData({ jumlah: '', kerusakan: '', satuan: '' }); // Reset form setelah save
-        setShowForm(false); // Menyembunyikan form setelah save
+        setShowForm(false); // Sembunyikan form setelah save
     };
 
     const handleBack = () => {
-        setShowForm(false); // Menyembunyikan form tanpa save
+        setShowForm(false); // Sembunyikan form tanpa save
     };
 
     return (
@@ -124,44 +156,49 @@ export default function Sitrep() {
                             </div>
                         </div>
                     )}
+
                     <div className="mt-[20px] p-4">
-                        {savedData.map((data, index) => (
-                            <div
-                                key={index}
-                                className="mb-4 p-4 bg-white border border-orange-500 rounded-lg shadow-md"
-                            >
-                                <div className="flex justify-between">
-                                    <div className="w-1/2">
-                                        <p className="font-bold text-gray-700 text-md">Kerusakan</p>
-                                        <p className="text-gray-800">{data.kerusakan}</p>
+                        {isLoading ? (
+                            <p>Loading...</p> // Menampilkan loading text saat data sedang diambil
+                        ) : (
+                            savedData.map((data, index) => (
+                                <div
+                                    key={data.id || index} // Gunakan ID jika tersedia, jika tidak gunakan index
+                                    className="mb-4 p-4 bg-white border border-orange-500 rounded-lg shadow-md"
+                                >
+                                    <div className="flex justify-between">
+                                        <div className="w-1/2">
+                                            <p className="font-bold text-gray-700 text-md">Kerusakan</p>
+                                            <p className="text-gray-800">{data.kerusakan}</p>
+                                        </div>
+                                        <div className="w-1/2">
+                                            <p className="font-bold text-gray-700 text-md">Satuan</p>
+                                            <p className="text-gray-800">{data.satuan}</p>
+                                        </div>
                                     </div>
-                                    <div className="w-1/2">
-                                        <p className="font-bold text-gray-700 text-md">Satuan</p>
-                                        <p className="text-gray-800">{data.satuan}</p>
+                                    <div className="flex justify-between">
+                                        <div className="mt-4">
+                                            <p className="font-bold text-gray-700 text-md">Jumlah</p>
+                                            <p className="text-gray-800">{data.jumlah}</p>
+                                        </div>
+                                        <div className="flex mt-4">
+                                            <button className="mr-4 text-blue-500 hover:text-blue-700">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
+                                                </svg>
+                                                Edit
+                                            </button>
+                                            <button className="text-red-500 hover:text-red-700">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                                Delete
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="flex justify-between">
-                                    <div className="mt-4">
-                                        <p className="font-bold text-gray-700 text-md">Jumlah</p>
-                                        <p className="text-gray-800">{data.jumlah}</p>
-                                    </div>
-                                    <div className="flex mt-4">
-                                        <button className="mr-4 text-blue-500 hover:text-blue-700">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
-                                            </svg>
-                                            Edit
-                                        </button>
-                                        <button className="text-red-500 hover:text-red-700">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M10 3h4a1 1 0 011 1v1H9V4a1 1 0 011-1z" />
-                                            </svg>
-                                            Hapus
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

@@ -1,15 +1,17 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from 'next/link'; // Import Link untuk navigasi
 
 export default function Sitrep() {
     const [showForm, setShowForm] = useState(false);
+    const [isLoading, setIsLoading] = useState(false); // Tambahkan state isLoading
     const [formData, setFormData] = useState({
         jumlah: '',
         kebutuhanmendesak: '',
         satuan: '',
     });
     const [savedData, setSavedData] = useState([]); // State untuk menyimpan semua data yang diinput
+    const [apiData, setApiData] = useState([]); // State untuk menyimpan data dari API
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -29,6 +31,37 @@ export default function Sitrep() {
     const handleBack = () => {
         setShowForm(false); // Menyembunyikan form tanpa save
     };
+
+    // Mengambil data dari API
+    useEffect(() => {
+        async function fetchData() {
+            setIsLoading(true); // Set loading menjadi true saat mulai mengambil data
+            try {
+                const response = await fetch('/api/getKebutuhan_mendesak/');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const result = await response.json();
+
+                if (result.status) {
+                    const fetchedData = result.data.map((item) => ({
+                        jumlah: item.jumlah, // Ambil data jumlah
+                        kebutuhanmendesak: item.kebutuhan_mendesak, // Ambil data jenis korban jiwa
+                        satuan: item.satuan, // Ambil data satuan
+                    }));
+                    setSavedData(fetchedData); // Simpan data ke savedData
+                } else {
+                    console.error("Data tidak tersedia");
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setIsLoading(false); // Set loading menjadi false setelah selesai
+            }
+        }
+
+        fetchData();
+    }, []); // Hanya dijalankan saat komponen pertama kali dimuat
 
     return (
         <>
@@ -152,7 +185,7 @@ export default function Sitrep() {
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M10 3h4a1 1 0 011 1v1H9V4a1 1 0 011-1z" />
                                                 </svg>
-                                                Hapus
+                                                Delete
                                             </button>
                                         </div>
                                     </div>
@@ -160,6 +193,13 @@ export default function Sitrep() {
                             </div>
                         ))}
                     </div>
+
+                    {/* Menampilkan loading */}
+                    {isLoading && (
+                        <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-white bg-opacity-50 z-10">
+                            <p className="text-lg font-bold">Loading...</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </>

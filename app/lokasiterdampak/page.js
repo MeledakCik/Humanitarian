@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Select from 'react-select'; // Import react-select
 import Link from 'next/link'; // Import Link untuk navigasi
 
@@ -18,6 +18,36 @@ export default function Sitrep() {
         kecamatan: null, // Default value untuk kecamatan
     });
     const [savedData, setSavedData] = useState([]); // State untuk menyimpan semua data yang diinput
+    const [isLoading, setIsLoading] = useState(true); // State untuk loading
+
+    // Fetch data from API when component mounts
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/getLokasi_terdampak/');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const result = await response.json();
+
+                if (result.status) {
+                    const fetchedData = result.data.map((item) => ({
+                        jumlah: item.jumlah, // Ambil data jumlah
+                        kecamatan: item.kec_id, // Ambil data kecamatan
+                    }));
+                    setSavedData(fetchedData); // Simpan data ke savedData
+                } else {
+                    console.error("Data tidak tersedia");
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setIsLoading(false); // Set loading menjadi false setelah selesai
+            }
+        }
+
+        fetchData();
+    }, []); // Empty dependency array means this effect runs once when component mounts
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -129,37 +159,27 @@ export default function Sitrep() {
                     )}
 
                     <div className="mt-[20px] p-4">
-                        {savedData.map((data, index) => (
-                            <div
-                                key={index}
-                                className="mb-4 p-4 bg-white border border-orange-500 rounded-lg shadow-md"
-                            >
-                                <div className="flex justify-between">
-                                    <div className="w-1/2">
-                                        <p className="font-bold text-gray-700 text-md">Kecamatan</p>
-                                        <p className="text-gray-800">{data.kecamatan?.label}</p>
-                                    </div>
-                                    <div className="w-1/2">
-                                        <p className="font-bold text-gray-700 text-md">Jumlah</p>
-                                        <p className="text-gray-800">{data.jumlah}</p>
-                                    </div>
-                                    <div className="flex">
-                                        <button className="mr-4 text-blue-500 hover:text-blue-700">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
-                                            </svg>
-                                            Edit
-                                        </button>
-                                        <button className="text-red-500 hover:text-red-700">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M10 3h4a1 1 0 011 1v1H9V4a1 1 0 011-1z" />
-                                            </svg>
-                                            Hapus
-                                        </button>
+                        {isLoading ? (
+                            <p>Loading...</p>
+                        ) : (
+                            savedData.map((data, index) => (
+                                <div
+                                    key={index}
+                                    className="mb-4 p-4 bg-white border border-orange-500 rounded-lg shadow-md"
+                                >
+                                    <div className="flex justify-between">
+                                        <div className="w-1/2">
+                                            <p className="font-bold text-gray-700 text-md">Kecamatan</p>
+                                            <p className="text-gray-800">{data.kecamatan}</p> {/* Tampilkan kecamatan langsung */}
+                                        </div>
+                                        <div className="w-1/2">
+                                            <p className="font-bold text-gray-700 text-md">Jumlah</p>
+                                            <p className="text-gray-800">{data.jumlah}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
                 </div>
             </div>
