@@ -7,7 +7,7 @@ export default function Sitrep() {
     const [formData, setFormData] = useState([
         {
             date: "",
-            eventType: "",
+            jenis_kejadian: "",
             eventName: "",
             pic: "",
             provinsi: "",
@@ -19,8 +19,6 @@ export default function Sitrep() {
     ]);
     const [currentPage, setCurrentPage] = useState(0);
     const [message, setMessage] = useState("");
-    const [isOnline, setIsOnline] = useState(true);
-    const [drafts, setDrafts] = useState([]);
     const [publishedEvents, setPublishedEvents] = useState([]);
     const [provinsiOptions, setProvinsiOptions] = useState([]);
     const [kotaOptions, setKotaOptions] = useState([]);
@@ -28,6 +26,7 @@ export default function Sitrep() {
     const [kelurahanOptions, setKelurahanOptions] = useState([]);
     const [jenis_kejadianOptions, setJenis_kejadianOptions] = useState([]);
     const [pic_lapanganOptions, setPic_lapanganOptions] = useState([]);
+    
     useEffect(() => {
         const fetchJenis_kejadian = async () => {
             try {
@@ -156,9 +155,6 @@ export default function Sitrep() {
         }
     }, [formData[currentPage]?.kota]);
 
-
-
-    // Memanggil API untuk mendapatkan kelurahan berdasarkan ID kecamatan yang dipilih
     useEffect(() => {
         console.log("kelurahan changed:", formData[currentPage]?.kecamatan);
 
@@ -166,14 +162,9 @@ export default function Sitrep() {
             const fetchkelurahan = async () => { // Renamed to fetchKecamatan for clarity
                 try {
                     const response = await fetch(`/api/getKelurahan?district_id=${formData[currentPage].kecamatan}`);
-
-                    // Periksa apakah response berhasil
                     if (!response.ok) throw new Error("Failed to fetch kecamatan");
-
                     const data = await response.json();
                     console.log("Data yang diterima dari API:", data);
-
-                    // Cek apakah data berbentuk array
                     if (Array.isArray(data.data?.data)) {
                         const options = data.data.data.map((kelurahan) => ({
                             value: kelurahan.id,
@@ -193,6 +184,66 @@ export default function Sitrep() {
         }
     }, [formData[currentPage]?.kecamatan]);
 
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/getDampak_sarpras/');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const result = await response.json();
+
+                if (result.status) {
+                    const fetchedData = result.data.map((item) => ({
+                        jumlah: item.jumlah || "Data tidak ada",
+                        kerusakan: item.kerusakan || "Data tidak ada",
+                        satuan: item.satuan || "Data tidak ada"
+                    }));
+                    setDataItems(fetchedData);
+                } else {
+                    console.error("Data tidak tersedia");
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        }
+
+        fetchData();
+    }, []);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const payload = {
+                tanggal_kejadian: formData[currentPage].date,
+                nama_kejadian: formData[currentPage].eventName,
+                jenis_kejadian_id: formData[currentPage].jenis_kejadian,
+                pic_id: formData[currentPage].pic_lapangan,
+                province_id: formData[currentPage].provinsi,
+                city_id: formData[currentPage].kota,
+                district_id: formData[currentPage].kecamatan,
+                sub_district_id: formData[currentPage].kelurahan,
+                alamat_lengkap: formData[currentPage].address,
+            };
+
+            const response = await fetch("/api/createSitrep/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                setMessage("Data successfully submitted.");
+            } else {
+                setMessage(`Error: ${data.message || "Submission failed"}`);
+            }
+        } catch (error) {
+            setMessage(`Error: ${error.message}`);
+        }
+    };
 
     const handleInputChange = (index, field, value) => {
         const newFormData = [...formData];
@@ -206,63 +257,6 @@ export default function Sitrep() {
         setFormData(newFormData);
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (activeMenu === "publish" && isOnline) {
-            setPublishedEvents((prev) => [...prev, ...formData]);
-            setMessage("Acara dipublikasikan!");
-            console.log("Acara yang dipublikasikan:", formData);
-        } else if (activeMenu === "draft") {
-            const updatedDrafts = [...drafts, ...formData];
-            localStorage.setItem("drafts", JSON.stringify(updatedDrafts));
-            setDrafts(updatedDrafts);
-            setMessage("Acara disimpan di Draft!");
-        } else {
-            setMessage("Koneksi offline. Anda tidak dapat mempublikasikan.");
-        }
-        resetForm();
-    };
-
-    const resetForm = () => {
-        setFormData([
-            {
-                date: "",
-                eventType: "",
-                eventName: "",
-                pic: "",
-                provinsi: "",
-                kota: "",
-                kecamatan: "",
-                kelurahan: "",
-                address: "",
-            },
-        ]);
-        setCurrentPage(0); // Reset to the first page after saving
-    };
-
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            setIsOnline(navigator.onLine);
-            window.addEventListener("online", checkConnection);
-            window.addEventListener("offline", checkConnection);
-
-            const storedDrafts = localStorage.getItem("drafts");
-            if (storedDrafts) {
-                setDrafts(JSON.parse(storedDrafts));
-            }
-
-            return () => {
-                window.removeEventListener("online", checkConnection);
-                window.removeEventListener("offline", checkConnection);
-            };
-        }
-    }, []);
-
-    const checkConnection = () => {
-        setIsOnline(navigator.onLine);
-    };
-
-    // Custom styling for Select components
     const selectStyles = {
         control: (base) => ({
             ...base,
@@ -284,17 +278,17 @@ export default function Sitrep() {
     };
 
     return (
-        <div className="flex flex-col items-center min-h-screen bg-gray-100">
-            <nav className="w-full bg-[#ff6b00] p-6 ">
-                <div className="flex justify-center">
-                    <p className="text-white text-bold text-[16px]">
+        <div className="flex flex-col items-center min-h-screen bg-white">
+            <nav className="w-full bg-[#ff6b00] p-6 shadow-b-lg">
+                <div className="flex mt-[10px] justify-center relative">
+                    <p className="text-white font-bold text-[22px]">
                         PUBLISH ENTRY REPORT
                     </p>
                 </div>
             </nav>
-            <div className="flex flex-col w-full max-w-full">
+            <div className="flex flex-col w-[380px] max-w-md">
                 <form
-                    className="bg-white p-6 rounded shadow-md w-full"
+                    className="bg-white mt-5"
                     onSubmit={handleSubmit}
                 >
                     <div className="mb-4">
@@ -433,7 +427,7 @@ export default function Sitrep() {
                         </button>
                         <a href="./damsarpras">
                             <button
-                                type="button"
+                                type="submit"
                                 className="bg-orange-500 text-white py-2 px-6 font-bold rounded"
                             >
                                 NEXT

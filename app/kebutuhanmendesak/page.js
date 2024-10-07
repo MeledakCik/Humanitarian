@@ -4,14 +4,12 @@ import Link from 'next/link'; // Import Link untuk navigasi
 
 export default function Sitrep() {
     const [showForm, setShowForm] = useState(false);
-    const [isLoading, setIsLoading] = useState(false); // Tambahkan state isLoading
+    const [dataItems, setDataItems] = useState([]);
     const [formData, setFormData] = useState({
         jumlah: '',
         kebutuhanmendesak: '',
         satuan: '',
     });
-    const [savedData, setSavedData] = useState([]); // State untuk menyimpan semua data yang diinput
-    const [apiData, setApiData] = useState([]); // State untuk menyimpan data dari API
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -20,22 +18,8 @@ export default function Sitrep() {
             [name]: value,
         });
     };
-
-    const handleSave = () => {
-        // Menyimpan data ke array savedData
-        setSavedData([...savedData, formData]);
-        setFormData({ jumlah: '', kebutuhanmendesak: '', satuan: '' }); // Reset form setelah save
-        setShowForm(false); // Menyembunyikan form setelah save
-    };
-
-    const handleBack = () => {
-        setShowForm(false); // Menyembunyikan form tanpa save
-    };
-
-    // Mengambil data dari API
     useEffect(() => {
         async function fetchData() {
-            setIsLoading(true); // Set loading menjadi true saat mulai mengambil data
             try {
                 const response = await fetch('/api/getKebutuhan_mendesak/');
                 if (!response.ok) {
@@ -49,56 +33,45 @@ export default function Sitrep() {
                         kebutuhanmendesak: item.kebutuhan_mendesak, // Ambil data jenis korban jiwa
                         satuan: item.satuan, // Ambil data satuan
                     }));
-                    setSavedData(fetchedData); // Simpan data ke savedData
+                    setDataItems(fetchedData);
                 } else {
                     console.error("Data tidak tersedia");
                 }
             } catch (error) {
                 console.error("Error fetching data:", error);
-            } finally {
-                setIsLoading(false); // Set loading menjadi false setelah selesai
             }
         }
 
         fetchData();
-    }, []); // Hanya dijalankan saat komponen pertama kali dimuat
+    }, []);
 
     return (
         <>
-            <div className="flex flex-col items-center bg-gray-100">
+            <div className="flex flex-col items-center bg-white">
                 <nav className="w-full bg-[#ff6b00] p-6 shadow-b-lg">
                     <div className="flex mt-[10px] justify-center">
                         <p className="text-white font-bold text-[22px]">Kebutuhan Mendesak</p>
                     </div>
                 </nav>
-                <div className="w-full relative min-h-full bg-white">
-                    <div className="flex items-center justify-center mt-[20px]">
-                        <button
-                            className="w-[325px] h-[50px] bg-[#8bff7f] rounded-lg text-[13px] flex items-center justify-center"
-                            onClick={() => setShowForm(!showForm)} // Toggle form saat button ditekan
+                <div className="w-[380px] max-w-md mt-4">
+                    <button
+                        className="w-full h-[50px] bg-green-500 rounded-lg text-white font-bold flex items-center justify-center mb-4"
+                        onClick={() => setShowForm(!showForm)}
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            className="w-6 h-6 mr-2"
                         >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                className="w-[24px] h-[24px] mr-2 font-bold text-[#57636C]"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M12 4v16m8-8H4"
-                                />
-                            </svg>
-                            <span className="font-bold font-[700] text-[#57636C]">
-                                {showForm ? "Tutup Data" : "Tambahkan Data"}
-                            </span>
-                        </button>
-                    </div>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        {showForm ? "Tutup Data" : "Tambahkan Data"}
+                    </button>
 
                     {showForm && (
-                        <div className="mt-[10px] p-7 bg-white rounded-lg">
+                        <div className="mt-[10px] bg-white rounded-lg">
                             <div className="mb-4">
                                 <label className="block text-[14px] font-bold text-gray-700">Kebutuhan Mendesak*</label>
                                 <div className="relative">
@@ -143,7 +116,6 @@ export default function Sitrep() {
                                     </button>
                                 </Link>
                                 <button
-                                    onClick={handleSave}
                                     className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg"
                                 >
                                     SAVE
@@ -157,23 +129,23 @@ export default function Sitrep() {
                         </div>
                     )}
 
-                    <div className="mt-[20px] p-4">
-                        {savedData.map((data, index) => (
+                    <div className="mt-6 space-y-4 w-[380px] max-w-md">
+                        {dataItems.map((item, index) => (
                             <div
                                 key={index}
-                                className="mb-4 p-4 bg-white border border-orange-500 rounded-lg shadow-md"
+                                className="p-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md"
                             >
                                 <div className="flex justify-between">
                                     <div className="w-1/2">
                                         <p className="font-bold text-gray-700 text-md">Kebutuhan Mendesak</p>
-                                        <p className="text-gray-800">{data.kebutuhanmendesak}</p>
+                                        <p className="text-gray-800">{item.kebutuhanmendesak}</p>
                                         <p className="font-bold text-gray-700 text-md mt-4">Jumlah</p>
-                                        <p className="text-gray-800">{data.jumlah}</p>
+                                        <p className="text-gray-800">{item.jumlah}</p>
                                     </div>
 
                                     <div className="w-1/4 flex flex-col">
                                         <p className="font-bold text-gray-700 text-md">Satuan</p>
-                                        <p className="text-gray-800">{data.satuan}</p>
+                                        <p className="text-gray-800">{item.satuan}</p>
                                         <div className="flex items-center mt-4">
                                             <button className="mr-4 text-blue-500 hover:text-blue-700">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
@@ -193,13 +165,6 @@ export default function Sitrep() {
                             </div>
                         ))}
                     </div>
-
-                    {/* Menampilkan loading */}
-                    {isLoading && (
-                        <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-white bg-opacity-50 z-10">
-                            <p className="text-lg font-bold">Loading...</p>
-                        </div>
-                    )}
                 </div>
             </div>
         </>
