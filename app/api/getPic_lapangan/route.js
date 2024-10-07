@@ -1,6 +1,6 @@
 export async function GET(req) {
     try {
-        const response = await fetch('https://humanitarian1-rz-be-dev1.cnt.id/apid/get_pic_lapangan');
+        const response = await fetch('https://humanitarian1-rz-be-dev1.cnt.id/apid/get_user');
 
         if (!response.ok) {
             console.error(`HTTP error! status: ${response.status}`);

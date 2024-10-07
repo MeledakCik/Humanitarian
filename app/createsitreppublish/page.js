@@ -18,8 +18,8 @@ export default function Sitrep() {
         },
     ]);
     const [currentPage, setCurrentPage] = useState(0);
+    const [dataItems, setDataItems] = useState([]);
     const [message, setMessage] = useState("");
-    const [publishedEvents, setPublishedEvents] = useState([]);
     const [provinsiOptions, setProvinsiOptions] = useState([]);
     const [kotaOptions, setKotaOptions] = useState([]);
     const [kecamatanOptions, setKecamatanOptions] = useState([]);
@@ -57,7 +57,7 @@ export default function Sitrep() {
                 if (data && data.status && data.data) {
                     const options = data.data.map((pic_lapangan) => ({
                         value: pic_lapangan.id,
-                        label: pic_lapangan.pic,
+                        label: pic_lapangan.fullname,
                     }));
                     setPic_lapanganOptions(options);
                 }
@@ -155,6 +155,9 @@ export default function Sitrep() {
         }
     }, [formData[currentPage]?.kota]);
 
+
+
+    // Memanggil API untuk mendapatkan kelurahan berdasarkan ID kecamatan yang dipilih
     useEffect(() => {
         console.log("kelurahan changed:", formData[currentPage]?.kecamatan);
 
@@ -162,9 +165,14 @@ export default function Sitrep() {
             const fetchkelurahan = async () => { // Renamed to fetchKecamatan for clarity
                 try {
                     const response = await fetch(`/api/getKelurahan?district_id=${formData[currentPage].kecamatan}`);
+
+                    // Periksa apakah response berhasil
                     if (!response.ok) throw new Error("Failed to fetch kecamatan");
+
                     const data = await response.json();
                     console.log("Data yang diterima dari API:", data);
+
+                    // Cek apakah data berbentuk array
                     if (Array.isArray(data.data?.data)) {
                         const options = data.data.data.map((kelurahan) => ({
                             value: kelurahan.id,
@@ -244,6 +252,8 @@ export default function Sitrep() {
             setMessage(`Error: ${error.message}`);
         }
     };
+
+
 
     const handleInputChange = (index, field, value) => {
         const newFormData = [...formData];

@@ -1,8 +1,17 @@
 
-export async function GET(req) {
+export async function POST(req) {
     try {
-        const response = await fetch('https://humanitarian1-rz-be-dev1.cnt.id/apid/create_site_report');
+        const requestBody = await req.json(); // Parse the JSON body
+        console.log(requestBody,"cok")
+        const response = await fetch('https://humanitarian1-rz-be-dev1.cnt.id/apid/create_site_report',{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody),
+        });
 
+        // console.log(response ,"iki mid cupu")
         if (!response.ok) {
             console.error(`HTTP error! status: ${response.status}`);
             return new Response(JSON.stringify({ message: 'Error fetching data from external API' }), {
