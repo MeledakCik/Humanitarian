@@ -4,17 +4,14 @@ import Link from 'next/link'; // Import Link untuk navigasi
 
 export default function Sitrep() {
     const [showForm, setShowForm] = useState(false);
-    const [isLoading, setIsLoading] = useState(true); // Tambahkan state untuk loading
+    const [dataItems, setDataItems] = useState([]);
     const [formData, setFormData] = useState({
         jumlah: '',
         jeniskorbanjiwa: '',
     });
-    const [savedData, setSavedData] = useState([]); // State untuk menyimpan semua data yang diinput
 
-    // Mengambil data saat komponen pertama kali dimuat
     useEffect(() => {
         async function fetchData() {
-            setIsLoading(true); // Set loading menjadi true saat mulai mengambil data
             try {
                 const response = await fetch('/api/getJumlah_korban/');
                 if (!response.ok) {
@@ -27,19 +24,17 @@ export default function Sitrep() {
                         jumlah: item.jumlah, // Ambil data jumlah
                         jeniskorbanjiwa: item.jenis_korban_jiwa, // Ambil data jenis korban jiwa
                     }));
-                    setSavedData(fetchedData); // Simpan data ke savedData
+                    setDataItems(fetchedData);
                 } else {
                     console.error("Data tidak tersedia");
                 }
             } catch (error) {
                 console.error("Error fetching data:", error);
-            } finally {
-                setIsLoading(false); // Set loading menjadi false setelah selesai
             }
         }
 
         fetchData();
-    }, []);  // Hanya dijalankan saat komponen pertama kali dimuat
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -49,53 +44,33 @@ export default function Sitrep() {
         });
     };
 
-    const handleSave = () => {
-        // Menyimpan data ke array savedData
-        setSavedData([...savedData, formData]);
-        setFormData({ jumlah: '', jeniskorbanjiwa: '' }); // Reset form setelah save
-        setShowForm(false); // Menyembunyikan form setelah save
-    };
-
-    const handleBack = () => {
-        setShowForm(false); // Menyembunyikan form tanpa save
-    };
-
     return (
         <>
-            <div className="flex flex-col items-center bg-gray-100">
+            <div className="flex flex-col items-center bg-white">
                 <nav className="w-full bg-[#ff6b00] p-6 shadow-b-lg">
                     <div className="flex mt-[10px] justify-center">
                         <p className="text-white font-bold text-[22px]">Jumlah Korban</p>
                     </div>
                 </nav>
-                <div className="w-full relative min-h-full bg-white">
-                    <div className="flex items-center justify-center mt-[20px]">
-                        <button
-                            className="w-[325px] h-[50px] bg-[#8bff7f] rounded-lg text-[13px] flex items-center justify-center"
-                            onClick={() => setShowForm(!showForm)} // Toggle form saat button ditekan
+                <div className="w-[380px] max-w-md mt-4">
+                    <button
+                        className="w-full h-[50px] bg-green-500 rounded-lg text-white font-bold flex items-center justify-center mb-4"
+                        onClick={() => setShowForm(!showForm)}
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            className="w-6 h-6 mr-2"
                         >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                className="w-[24px] h-[24px] mr-2 font-bold text-[#57636C]"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M12 4v16m8-8H4"
-                                />
-                            </svg>
-                            <span className="font-bold font-[700] text-[#57636C]">
-                                {showForm ? "Tutup Data" : "Tambahkan Data"}
-                            </span>
-                        </button>
-                    </div>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        {showForm ? "Tutup Data" : "Tambahkan Data"}
+                    </button>
 
                     {showForm && (
-                        <div className="mt-[10px] p-7 bg-white rounded-lg">
+                        <div className="mt-[10px] bg-white rounded-lg">
                             <div className="mb-4">
                                 <label className="block text-[14px] font-bold text-gray-700">Jenis Korban Jiwa*</label>
                                 <div className="relative">
@@ -128,7 +103,6 @@ export default function Sitrep() {
                                     </button>
                                 </Link>
                                 <button
-                                    onClick={handleSave}
                                     className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg"
                                 >
                                     SAVE
@@ -142,23 +116,23 @@ export default function Sitrep() {
                         </div>
                     )}
 
-                    <div className="mt-[20px] p-4">
-                        {savedData.map((data, index) => (
+                    <div className="mt-7">
+                        {dataItems.map((item, index) => (
                             <div
                                 key={index}
-                                className="mb-4 p-4 bg-white border border-orange-500 rounded-lg shadow-md"
+                                className="p-4 mt-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md"
                             >
                                 <div className="flex justify-between">
                                     <div className="w-1/2">
                                         <p className="font-bold text-gray-700 text-md">Jenis Korban Jiwa</p>
-                                        <p className="text-gray-800">{data.jeniskorbanjiwa}</p>
+                                        <p className="text-gray-800">{item.jeniskorbanjiwa}</p>
                                     </div>
                                     <div className="w-1/2">
                                         <p className="font-bold text-gray-700 text-md">Jumlah</p>
-                                        <p className="text-gray-800">{data.jumlah}</p>
+                                        <p className="text-gray-800">{item.jumlah}</p>
                                     </div>
                                     <div className="flex">
-                                        <button className="mr-4 text-blue-500 hover:text-blue-700">
+                                        <button className="mr-1 text-blue-500 hover:text-blue-700">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
                                             </svg>
