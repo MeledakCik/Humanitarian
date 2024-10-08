@@ -9,7 +9,36 @@ export default function Sitrep() {
         jumlah: '',
         kerusakan: '',
         satuan: '',
+        dampak_site_id: '',
     });
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const payload = {
+                kerusakan: formData[currentPage].kerusakan,
+                jumlah: formData[currentPage].jumlah,
+                satuan: formData[currentPage].satuan,
+                dampak_site_id: formData[currentPage].dampak_site_id,
+            };
+
+            const response = await fetch("/api/createDamsaepras/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                setMessage("Data successfully submitted.");
+            } else {
+                setMessage(`Error: ${data.message || "Submission failed"}`);
+            }
+        } catch (error) {
+            setMessage(`Error: ${error.message}`);
+        }
+    };
     useEffect(() => {
         async function fetchData() {
             try {
@@ -73,6 +102,18 @@ export default function Sitrep() {
                     {showForm && (
                         <div className="space-y-4 bg-white w-[380px] max-w-md rounded-md">
                             <div className="mb-4">
+                                <label className="block text-[14px] font-bold text-gray-700">Dampak Site Id</label>
+                                <div className="relative">
+                                    <input
+                                        type="read"
+                                        name="dampak_site_id"
+                                        value={formData.satuan}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mb-4">
                                 <label className="block text-[14px] font-bold text-gray-700">Jumlah*</label>
                                 <div className="relative">
                                     <input
@@ -109,7 +150,6 @@ export default function Sitrep() {
                                     />
                                 </div>
                             </div>
-
 
                             <div className="flex justify-between">
                                 <Link href="/sitrep" passHref>
