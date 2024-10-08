@@ -3,53 +3,48 @@ import { useState, useEffect } from "react";
 import Link from 'next/link';
 
 export default function Publish() {
-    const [checkedItemsPublish, setCheckedItemsPublish] = useState([]);
+    const [filter, setFilter] = useState('');
     const [searchTerm, setSearchTerm] = useState("");
-    const [dataItems, setDataItems] = useState([]);
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [notFound, setNotFound] = useState(false);
 
     useEffect(() => {
-        async function fetchData() {
+        const fetchData = async () => {
             try {
-                const response = await fetch('/api/getSitrep/');
+                const response = await fetch(`/api/getSitrep?search=${filter}`);
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
                 const result = await response.json();
-
-                if (result.status) {
-                    const filteredData = result.data.map((item, index) => ({
-                        id: item.id || index, // If item.id doesn't exist, use index as fallback
+                if (result.statusCode === 200) {
+                    const filteredData = result.data.data.map((item, index) => ({
+                        id: item.id || index,
                         nama_kejadian: item.nama_kejadian,
                         tanggal_kejadian: item.tanggal_kejadian,
                         city: item.city,
                     }));
-                    setDataItems(filteredData);
+
+                    setData(filteredData);
+                    setNotFound(filteredData.length === 0); // Atur status tidak ditemukan jika data kosong
                 } else {
                     console.error("Data tidak tersedia");
+                    setNotFound(true); // Atur status tidak ditemukan jika data tidak tersedia
                 }
+                setLoading(false);
             } catch (error) {
                 console.error("Error fetching data:", error);
+                setLoading(false);
+                setNotFound(true); // Set notFound true jika terjadi error
             }
-        }
+        };
+        const debounceFetch = setTimeout(() => {
+            fetchData();
+        }, 300); // Mengatur waktu tunda debouncing
 
-        fetchData();
-    }, []);
+        return () => clearTimeout(debounceFetch);
+    }, [filter]);
 
-    const filteredItems = dataItems.filter((item) =>
-        item.nama_kejadian?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.city?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const handleItemChangePublish = (index) => {
-        const newCheckedItems = [...checkedItemsPublish];
-        newCheckedItems[index] = !newCheckedItems[index];
-        setCheckedItemsPublish(newCheckedItems);
-        setSelectAllPublish(newCheckedItems.every(item => item));
-    };
-
-    const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
-    };
     return (
         <>
             <div className="w-full flex items-center justify-between mb-4">
@@ -70,19 +65,30 @@ export default function Publish() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 4a7 7 0 100 14 7 7 0 000-14zm0 0l4 4" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35" />
                     </svg>
-                    <input type="text" placeholder="Search..." className="flex-grow p-3 rounded-lg focus:outline-none" value={searchTerm} onChange={handleSearchChange} />
+                    <input type="text" placeholder="Search..." className="flex-grow p-3 rounded-lg focus:outline-none" value={filter}
+                        onChange={(e) => setFilter(e.target.value)} />
                 </div>
             </div>
 
-            {/* Checkbox "Select All" */}
+            {/* Display filtered items */}
             <div className="bg-white min-h-full">
                 <div className="relative w-full min-h-full">
-                    {filteredItems.length === 0 ? (
-                        <div className="text-gray-500">
-                            {searchTerm ? `"${searchTerm}" not found` : "No items available"}
+                    {loading ? (
+                        <div className='w-full min-w-full h-full min-h-full'>
+                            <p className='mt-2 text-center text-gray-500'>Loading data...</p>
+                        </div>
+                    ) : notFound ? ( // Menampilkan pesan jika data tidak ditemukan
+                        <div className='w-full min-w-full h-full min-h-full p-8'>
+                            <img src="/notfound.png" alt="Data tidak ditemukan" className="mx-auto" />
+                            <p className='flex text-[20px] font-semibold text-gray-400 justify-center'>Data Siswa Tidak Di Temukan</p>
+                        </div>
+                    ) : data.length === 0 ? ( // Menampilkan pesan kosong jika tidak ada data
+                        <div className='w-full min-w-full h-full min-h-full p-8'>
+                            <img src="/notfound.png" alt="Data tidak ditemukan" className="mx-auto" />
+                            <p className='flex text-[20px] font-semibold text-center justify-center'>Data Siswa Tidak Di Temukan</p>
                         </div>
                     ) : (
-                        filteredItems.map((item, index) => (
+                        data.map((item, index) => (
                             <div key={item.id} className="shadow-md mb-4 rounded-[20px]">
                                 <div className="shadow-lg p-4 rounded-[20px] flex items-center">
                                     <div className="flex-grow flex flex-col justify-between">

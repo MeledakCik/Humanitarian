@@ -1,4 +1,5 @@
-"use client";
+'use client';
+
 import { useState, useEffect } from "react";
 import Link from 'next/link';
 
@@ -11,17 +12,19 @@ export default function Sitrep() {
         satuan: '',
         dampak_site_id: '',
     });
+    const [message, setMessage] = useState("");
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const payload = {
-                kerusakan: formData[currentPage].kerusakan,
-                jumlah: formData[currentPage].jumlah,
-                satuan: formData[currentPage].satuan,
-                dampak_site_id: formData[currentPage].dampak_site_id,
+                kerusakan: formData.kerusakan,
+                jumlah: formData.jumlah,
+                satuan: formData.satuan,
+                dampak_site_id: formData.dampak_site_id,
             };
 
-            const response = await fetch("/api/createDamsaepras/", {
+            const response = await fetch("/api/createDamsarpras/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -32,6 +35,8 @@ export default function Sitrep() {
             const data = await response.json();
             if (response.ok) {
                 setMessage("Data successfully submitted.");
+                setShowForm(false);  // Hide form after submission
+                setFormData({ jumlah: '', kerusakan: '', satuan: '', dampak_site_id: '' }); // Reset form
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -39,6 +44,7 @@ export default function Sitrep() {
             setMessage(`Error: ${error.message}`);
         }
     };
+
     useEffect(() => {
         async function fetchData() {
             try {
@@ -100,14 +106,14 @@ export default function Sitrep() {
                     </button>
 
                     {showForm && (
-                        <div className="space-y-4 bg-white w-[380px] max-w-md rounded-md">
+                        <form className="space-y-4 bg-white w-[380px] max-w-md rounded-md" onSubmit={handleSubmit}>
                             <div className="mb-4">
                                 <label className="block text-[14px] font-bold text-gray-700">Dampak Site Id</label>
                                 <div className="relative">
                                     <input
-                                        type="read"
+                                        type="text"
                                         name="dampak_site_id"
-                                        value={formData.satuan}
+                                        value={formData.dampak_site_id}
                                         onChange={handleInputChange}
                                         className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
                                     />
@@ -153,22 +159,18 @@ export default function Sitrep() {
 
                             <div className="flex justify-between">
                                 <Link href="/sitrep" passHref>
-                                    <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
+                                    <button type="button" className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
                                         BACK
                                     </button>
                                 </Link>
                                 <button
-                                    className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg"
+                                    type="submit"
+                                    className="bg-orange-500 text-white py-2 px-6 font-bold rounded"
                                 >
                                     SAVE
                                 </button>
-                                <Link href="/lokasiterdampak" passHref>
-                                    <button className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg">
-                                        NEXT
-                                    </button>
-                                </Link>
                             </div>
-                        </div>
+                        </form>
                     )}
                 </div>
 
