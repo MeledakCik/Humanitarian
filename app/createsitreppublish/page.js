@@ -1,10 +1,11 @@
 "use client";
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import Select from "react-select";
 
 export default function Sitrep() {
+    const router = useRouter();
     const [formData, setFormData] = useState([
         {
             date: "",
@@ -27,7 +28,6 @@ export default function Sitrep() {
     const [kelurahanOptions, setKelurahanOptions] = useState([]);
     const [jenis_kejadianOptions, setJenis_kejadianOptions] = useState([]);
     const [pic_lapanganOptions, setPic_lapanganOptions] = useState([]);
-    const router = useRouter();
     
     useEffect(() => {
         const fetchJenis_kejadian = async () => {
@@ -430,6 +430,12 @@ export default function Sitrep() {
                                 BACK
                             </button>
                         </a>
+                        <button
+                            type="submit"
+                            className="bg-orange-500 text-white py-2 px-6 font-bold rounded"
+                        >
+                            SAVE
+                        </button>
                     </div>
                     {message && (
                         <p className="mt-4 text-center text-green-500">{message}</p>
