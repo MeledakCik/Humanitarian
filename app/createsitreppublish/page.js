@@ -235,7 +235,7 @@ export default function Sitrep() {
                 sub_district_id: formData[currentPage].kelurahan,
                 alamat_lengkap: formData[currentPage].address,
             };
-
+    
             const response = await fetch("/api/createSitrep/", {
                 method: "POST",
                 headers: {
@@ -243,11 +243,13 @@ export default function Sitrep() {
                 },
                 body: JSON.stringify(payload),
             });
-
+    
             const data = await response.json();
+            console.log(data, "berhasil");
+    
             if (response.ok) {
-                setMessage("Data successfully submitted.");
-                router.push('./damsarpras'); // Pindah halaman ke '/target-page' setelah berhasil
+                setMessage("Data berhasil dikirim.");
+                router.push(`./damsarpras?id=${data.ID}`); 
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -255,6 +257,7 @@ export default function Sitrep() {
             setMessage(`Error: ${error.message}`);
         }
     };
+    
 
     const handleInputChange = (index, field, value) => {
         const newFormData = [...formData];

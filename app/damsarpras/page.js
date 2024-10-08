@@ -12,7 +12,6 @@ export default function Sitrep() {
         satuan: '',
         dampak_site_id: '',
     });
-    const [message, setMessage] = useState("");
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -35,8 +34,8 @@ export default function Sitrep() {
             const data = await response.json();
             if (response.ok) {
                 setMessage("Data successfully submitted.");
-                setShowForm(false);  // Hide form after submission
-                setFormData({ jumlah: '', kerusakan: '', satuan: '', dampak_site_id: '' }); // Reset form
+                setShowForm(false);
+                setFormData({ jumlah: '', kerusakan: '', satuan: '', dampak_site_id: '' });
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -58,7 +57,8 @@ export default function Sitrep() {
                     const fetchedData = result.data.map((item) => ({
                         jumlah: item.jumlah || "Data tidak ada",
                         kerusakan: item.kerusakan || "Data tidak ada",
-                        satuan: item.satuan || "Data tidak ada"
+                        satuan: item.satuan || "Data tidak ada",
+                        dampak_site_id: item.dampak_site_id || null,
                     }));
                     setDataItems(fetchedData);
                 } else {
@@ -79,6 +79,7 @@ export default function Sitrep() {
             [name]: value,
         });
     };
+
 
     return (
         <>
