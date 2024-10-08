@@ -190,18 +190,18 @@ export default function Sitrep() {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-100">
-      <nav className="w-full bg-[#ff6b00] p-6 ">
-        <div className="flex justify-center">
-          <p className="text-white text-bold text-[16px]">
+    <div className="flex flex-col items-center min-h-screen bg-white">
+      <nav className="w-full bg-[#ff6b00] p-6 shadow-b-lg">
+        <div className="flex mt-[10px] justify-center relative">
+          <p className="text-white font-bold text-[22px]">
             PUBLISH DISTRIBUTION REPORT
           </p>
         </div>
       </nav>
 
-      <div className="flex flex-col w-full max-w-full">
+      <div className="flex flex-col w-[380px] max-w-md">
         <form
-          className="bg-white p-6 rounded shadow-md w-full"
+          className="bg-white mt-5"
           onSubmit={handleSubmit}
         >
           <div className="mb-4">

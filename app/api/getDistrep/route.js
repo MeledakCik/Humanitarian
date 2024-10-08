@@ -1,6 +1,11 @@
+// app/api/getStuden/route.js
 export async function GET(req) {
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get('search');
+
     try {
-        const response = await fetch('https://humanitarian1-rz-be-dev1.cnt.id/apid/get_distribution_report');
+        const url = `https://humanitarian1-rz-be-dev1.cnt.id/apid/get_distribution_report?search=${search}`;
+        const response = await fetch(url);
 
         if (!response.ok) {
             console.error(`HTTP error! status: ${response.status}`);
@@ -19,6 +24,12 @@ export async function GET(req) {
         let data;
         try {
             data = JSON.parse(text);
+            return new Response(JSON.stringify({ statusCode: 200, data: data }), {
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
         } catch (jsonError) {
             console.error("Error parsing JSON:", jsonError);
             return new Response(JSON.stringify({ message: 'Error parsing data from external API' }), {
@@ -29,23 +40,28 @@ export async function GET(req) {
             });
         }
 
-        console.log("Data yang diterima dari API:", data);
-        if (data && data.status) {
-            return new Response(JSON.stringify(data), {
-                status: 200,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-        } else {
-            console.error("Data tidak tersedia:", data);
-            return new Response(JSON.stringify({ message: 'Data tidak tersedia' }), {
-                status: 404,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-        }
+        // console.log("Data yang diterima dari APIx:", data);
+        // if (data && data.statusCode === 200) {
+        //     // Filter the data based on the student_name if provided
+        //     const filteredData = studentName
+        //         ? data.data.filter(item => item.student_name.toLowerCase().includes(studentName.toLowerCase()))
+        //         : data.data;
+
+        //     return new Response(JSON.stringify({ statusCode: 200, data: filteredData }), {
+        //         status: 200,
+        //         headers: {
+        //             'Content-Type': 'application/json'
+        //         }
+        //     });
+        // } else {
+        //     // console.error("Data tidak tersedia:", data);
+        //     return new Response(JSON.stringify({ message: 'Data tidak tersedia' }), {
+        //         status: 404,
+        //         headers: {
+        //             'Content-Type': 'application/json'
+        //         }
+        //     });
+        // }
     } catch (error) {
         console.error("Error fetching data:", error); // Log the error for debugging
         return new Response(JSON.stringify({ message: 'Internal Server Error' }), {

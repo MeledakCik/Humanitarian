@@ -124,7 +124,7 @@ export default function Sitrep() {
                 </button>
 
                 {showForm && (
-                    <div className="p-4 space-y-4 bg-white rounded-md">
+                    <div className="space-y-4 bg-white rounded-md">
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-bold text-gray-700">Cluster*</label>

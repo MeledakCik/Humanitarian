@@ -64,7 +64,7 @@ export default function Sitrep() {
 
                 {/* Form untuk menambahkan data */}
                 {showForm && (
-                    <div className="p-4 space-y-4 bg-white border border-orange-500 rounded-lg shadow-md">
+                    <div className="space-y-4 bg-white">
                         <div>
                             <label className="block text-sm font-bold text-gray-700">Mitra*</label>
                             <input

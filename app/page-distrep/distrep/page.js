@@ -7,10 +7,8 @@ import { IoIosArrowBack } from "react-icons/io";
 
 export default function Sitrep() {
     const [activeMenu, setActiveMenu] = useState('publish');
-
     return (
-        <div className="flex flex-col items-center bg-gray-100">
-
+        <div className="flex flex-col items-center bg-white">
             <nav className="w-full bg-[#ff6b00] p-6 shadow-b-lg">
                 <div className="flex mt-[10px] justify-center relative">
                     <Link href="/homeprofile"> 
@@ -22,7 +20,7 @@ export default function Sitrep() {
                 </div>
             </nav>
 
-            <div className="flex flex-col w-full max-w-full mt-[1px]">
+            <div className="flex flex-col w-[400px] max-w-md min-h-screen mt-[1px]">
                 <div className="flex">
                     <button
                         onClick={() => setActiveMenu('publish')}
