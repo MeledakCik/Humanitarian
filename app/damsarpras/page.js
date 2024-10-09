@@ -1,5 +1,4 @@
-'use client';
-
+"use client";
 import { useState, useEffect } from "react";
 import Link from 'next/link';
 
@@ -12,15 +11,14 @@ export default function Sitrep() {
         satuan: '',
         dampak_site_id: '',
     });
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const payload = {
-                kerusakan: formData.kerusakan,
-                jumlah: formData.jumlah,
-                satuan: formData.satuan,
-                dampak_site_id: formData.dampak_site_id,
+                kerusakan: formData[currentPage].kerusakan,
+                jumlah: formData[currentPage].jumlah,
+                satuan: formData[currentPage].satuan,
+                dampak_site_id: formData[currentPage].dampak_site_id,
             };
 
             const response = await fetch("/api/createDamsarpras/", {
@@ -34,8 +32,6 @@ export default function Sitrep() {
             const data = await response.json();
             if (response.ok) {
                 setMessage("Data successfully submitted.");
-                setShowForm(false);
-                setFormData({ jumlah: '', kerusakan: '', satuan: '', dampak_site_id: '' });
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -43,7 +39,6 @@ export default function Sitrep() {
             setMessage(`Error: ${error.message}`);
         }
     };
-
     useEffect(() => {
         async function fetchData() {
             try {
@@ -57,8 +52,7 @@ export default function Sitrep() {
                     const fetchedData = result.data.map((item) => ({
                         jumlah: item.jumlah || "Data tidak ada",
                         kerusakan: item.kerusakan || "Data tidak ada",
-                        satuan: item.satuan || "Data tidak ada",
-                        dampak_site_id: item.dampak_site_id || null,
+                        satuan: item.satuan || "Data tidak ada"
                     }));
                     setDataItems(fetchedData);
                 } else {
@@ -79,7 +73,6 @@ export default function Sitrep() {
             [name]: value,
         });
     };
-
 
     return (
         <>
@@ -107,14 +100,14 @@ export default function Sitrep() {
                     </button>
 
                     {showForm && (
-                        <form className="space-y-4 bg-white w-[380px] max-w-md rounded-md" onSubmit={handleSubmit}>
+                        <div className="space-y-4 bg-white w-[380px] max-w-md rounded-md" onSubmit={handleSubmit}>
                             <div className="mb-4">
                                 <label className="block text-[14px] font-bold text-gray-700">Dampak Site Id</label>
                                 <div className="relative">
                                     <input
                                         type="text"
                                         name="dampak_site_id"
-                                        value={formData.dampak_site_id}
+                                        value={formData.dampak_site_id }
                                         onChange={handleInputChange}
                                         className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
                                     />
@@ -160,7 +153,7 @@ export default function Sitrep() {
 
                             <div className="flex justify-between">
                                 <Link href="/sitrep" passHref>
-                                    <button type="button" className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
+                                    <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
                                         BACK
                                     </button>
                                 </Link>
@@ -171,7 +164,7 @@ export default function Sitrep() {
                                     SAVE
                                 </button>
                             </div>
-                        </form>
+                        </div>
                     )}
                 </div>
 

@@ -2,9 +2,20 @@
 export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search');
+    const id = searchParams.get('id');
 
     try {
-        const url = `https://humanitarian1-rz-be-dev1.cnt.id/apid/get_site_report?search=${search}`;
+        let url = `https://humanitarian1-rz-be-dev1.cnt.id/apid/get_site_report`;
+        if(search) {
+            url = url + '?search=' + search
+        }
+
+
+        if(id) {
+            url = url + '?id=' + id
+        }
+        
+        // tanyaken ka si riski bisa teu di cek by id
         const response = await fetch(url);
 
         if (!response.ok) {

@@ -55,7 +55,7 @@ export default function Sitrep() {
 
     fetchData("/api/getPic_lapangan", setPicLapanganOptions, (item) => ({
       value: item.id,
-      label: item.pic,
+      label: item.fullname,
     }));
 
     fetchData("/api/getProvinsi", setProvinsiOptions, (item) => ({

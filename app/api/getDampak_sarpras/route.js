@@ -48,11 +48,13 @@ export async function GET(req) {
         }
     } catch (error) {
         console.error("Error fetching data:", error); // Log the error for debugging
-        return new Response(JSON.stringify({ message: 'Internal Server Error' }), {
-            status: 500,
+        return new Response(JSON.stringify(data), {
+            status: 200,
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*', // Allow all origins or specify your frontend URL
             }
         });
+        
     }
 }

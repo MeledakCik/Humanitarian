@@ -96,7 +96,7 @@ export default function Draft() {
 
     return (
         <>
-            <Link href="/createsitrepdraft">
+            <Link href="./sitepdraft/create/">
                 <button className="w-[130px] h-[40px] bg-[#8bff7f] rounded-lg text-[13px] flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-[24px] h-[24px] mr-2">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -154,7 +154,6 @@ export default function Draft() {
                     )}
                 </div>
             </div>
-            {/* Edit Modal */}
             {isEditing && (
                 <div className="flex flex-col fixed inset-0 bg-black bg-opacity-50 items-center">
                     <nav className="w-full bg-[#ff6b00] p-6 shadow-b-lg">

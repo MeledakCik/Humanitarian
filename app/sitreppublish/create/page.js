@@ -157,9 +157,6 @@ export default function Sitrep() {
         }
     }, [formData[currentPage]?.kota]);
 
-
-
-    // Memanggil API untuk mendapatkan kelurahan berdasarkan ID kecamatan yang dipilih
     useEffect(() => {
         console.log("kelurahan changed:", formData[currentPage]?.kecamatan);
 
@@ -167,10 +164,7 @@ export default function Sitrep() {
             const fetchkelurahan = async () => { // Renamed to fetchKecamatan for clarity
                 try {
                     const response = await fetch(`/api/getKelurahan?district_id=${formData[currentPage].kecamatan}`);
-
-                    // Periksa apakah response berhasil
                     if (!response.ok) throw new Error("Failed to fetch kecamatan");
-
                     const data = await response.json();
                     console.log("Data yang diterima dari API:", data);
 
@@ -207,6 +201,7 @@ export default function Sitrep() {
                     const fetchedData = result.data.map((item) => ({
                         jumlah: item.jumlah || "Data tidak ada",
                         kerusakan: item.kerusakan || "Data tidak ada",
+                        dampak_site_id: item.dampak_site_id || "Data tidak ada",
                         satuan: item.satuan || "Data tidak ada"
                     }));
                     setDataItems(fetchedData);
