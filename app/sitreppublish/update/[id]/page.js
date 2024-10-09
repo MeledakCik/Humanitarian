@@ -235,11 +235,14 @@ export default function Sitrep() {
                 provinsi: value, // Update formData state
                 kota: "", // Reset kota when provinsi changes
                 kecamatan: "", // Reset kecamatan when provinsi changes
+                kelurahan: "", // Reset kelurahan when provinsi changes
             }));
             setCityKota(null); // Reset kota when provinsi changes
             setValueCity(null); // Reset valueCity
             setKecamatanKec(null); // Reset kecamatan when provinsi changes
             setValueKecamatan(null); // Reset valueKecamatan
+            setKelurahanKel(null); // Reset kelurahan when provinsi changes
+            setValueKelurahan(null); // Reset valueKelurahan
         } else if (field === "kota") {
             const selectedKota = kotaOptions.find((option) => option.value === value);
             setCityKota(selectedKota);
@@ -247,10 +250,13 @@ export default function Sitrep() {
                 ...prevData,
                 kota: value, // Update formData state
                 kecamatan: "", // Reset kecamatan when kota changes
+                kelurahan: "", // Reset kelurahan when kota changes
             }));
             setValueCity(selectedKota); // Set valueCity to selected kota
             setKecamatanKec(null); // Reset kecamatan when kota changes
             setValueKecamatan(null); // Reset valueKecamatan
+            setKelurahanKel(null); // Reset kelurahan when kota changes
+            setValueKelurahan(null); // Reset valueKelurahan
         } else if (field === "pic") {
             const selectedPic = pic_lapanganOptions.find((option) => option.value === value);
             setPicLapangan(selectedPic);
@@ -280,7 +286,12 @@ export default function Sitrep() {
                 ...prevData,
                 kelurahan: value, // Update formData state
             }));
-            setValueKelurahan(selectedKelurahan); // Set valueKecamatan to selected kecamatan
+            setValueKelurahan(selectedKelurahan); // Set valueKelurahan to selected kelurahan
+        } else if (field === "date") { // Handling the date input
+            setFormData((prevData) => ({
+                ...prevData,
+                date: value, // Update formData state with selected date
+            }));
         }
     };
 
@@ -365,7 +376,6 @@ export default function Sitrep() {
                         <input
                             type="date"
                             value={formData.date}
-
                             onChange={(e) => handleInputChange("date", e.target.value)}
                             className="border rounded w-full text-gray-400 py-2 px-3 mb-2"
                             required
@@ -433,7 +443,6 @@ export default function Sitrep() {
                             styles={selectStyles}
                             className="mb-2"
                             placeholder="Pilih Kecamatan"
-                            isDisabled={!cityKota} // Disable kota jika provinsi belum dipilih
                         />
 
                         <p className="mb-2">Kelurahan*</p>
@@ -445,7 +454,6 @@ export default function Sitrep() {
                             styles={selectStyles}
                             className="mb-2"
                             placeholder="Pilih Kelurahan"
-                            isDisabled={!kecamatanKec}
                         />
                         <p className="mb-2">Alamat</p>
                         <input
