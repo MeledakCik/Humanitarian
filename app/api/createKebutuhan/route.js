@@ -1,9 +1,8 @@
-
 export async function POST(req) {
     try {
         const requestBody = await req.json(); // Parse the JSON body
-        console.log("Final payload to API:", JSON.stringify(requestBody));
-        const response = await fetch('https://humanitarian1-rz-be-dev1.cnt.id/apid/create_dampak_sarpras',{
+        console.log(requestBody,"cok")
+        const response = await fetch('https://humanitarian1-rz-be-dev1.cnt.id/apid/create_kebutuhan_mendesak',{
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

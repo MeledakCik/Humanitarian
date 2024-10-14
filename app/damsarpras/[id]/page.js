@@ -1,27 +1,33 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import Link from 'next/link';
 
 export default function Sitrep() {
+    const router = useRouter();
+    const { id } = useParams();
     const [dataItems, setDataItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
+    const [message, setMessage] = useState([]);
     const [formData, setFormData] = useState({
+        id: '',
         jumlah: '',
         kerusakan: '',
         satuan: '',
-        dampak_site_id: '',
+        dampak_site_id: id,
     });
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const payload = {
-                kerusakan: formData[currentPage].kerusakan,
-                jumlah: formData[currentPage].jumlah,
-                satuan: formData[currentPage].satuan,
-                dampak_site_id: formData[currentPage].dampak_site_id,
+                kerusakan: formData.kerusakan,
+                jumlah: formData.jumlah,
+                satuan: formData.satuan,
+                dampak_site_id: id,
             };
 
-            const response = await fetch("/api/createDamsarpras/", {
+            const response = await fetch("/api/createDamsarpras", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -32,6 +38,7 @@ export default function Sitrep() {
             const data = await response.json();
             if (response.ok) {
                 setMessage("Data successfully submitted.");
+                router.push(`../lokasiterdampak/${data.dampak_site_id}`);
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -39,22 +46,26 @@ export default function Sitrep() {
             setMessage(`Error: ${error.message}`);
         }
     };
+
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await fetch('/api/getDampak_sarpras/');
+                const response = await fetch(`/api/getDampak_sarpras?dampak_site_id=${id}`);
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
                 const result = await response.json();
 
                 if (result.status) {
+                    // Directly use filtered data as the API request is filtered by `dampak_site_id`
                     const fetchedData = result.data.map((item) => ({
+                        id: item.id || "Data tidak ada",
                         jumlah: item.jumlah || "Data tidak ada",
                         kerusakan: item.kerusakan || "Data tidak ada",
                         satuan: item.satuan || "Data tidak ada"
                     }));
                     setDataItems(fetchedData);
+
                 } else {
                     console.error("Data tidak tersedia");
                 }
@@ -64,7 +75,39 @@ export default function Sitrep() {
         }
 
         fetchData();
-    }, []);
+    }, [id]);
+
+    const handleDelete = async (itemId) => {
+        if (!itemId) {
+            console.error("ID tidak ditemukan:", itemId);
+            return;
+        }
+        try {
+            const response = await fetch(`/api/deleteDamsarpras?id=${itemId}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ id: itemId }), // Pastikan ID ada di body
+            });
+
+            if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+            const data = await response.json();
+            setDataItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+            setMessage("Data berhasil dihapus.");
+        } catch (error) {
+            setMessage(`Error: ${error.message}`);
+        }
+    };
+
+    useEffect(() => {
+        if (id) {
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                dampak_site_id: id,
+            }));
+        }
+    }, [id]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -107,9 +150,9 @@ export default function Sitrep() {
                                     <input
                                         type="text"
                                         name="dampak_site_id"
-                                        value={formData.dampak_site_id }
-                                        onChange={handleInputChange}
+                                        value={formData.dampak_site_id}
                                         className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
+                                        readOnly
                                     />
                                 </div>
                             </div>
@@ -152,13 +195,14 @@ export default function Sitrep() {
                             </div>
 
                             <div className="flex justify-between">
-                                <Link href="/sitrep" passHref>
+                                <Link href="../sitrep" passHref>
                                     <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
                                         BACK
                                     </button>
                                 </Link>
                                 <button
                                     type="submit"
+                                    onClick={handleSubmit}
                                     className="bg-orange-500 text-white py-2 px-6 font-bold rounded"
                                 >
                                     SAVE
@@ -170,42 +214,42 @@ export default function Sitrep() {
 
                 <div className="mt-6 space-y-4 w-[380px] max-w-md">
                     {dataItems.map((item, index) => (
-                        <div
-                            key={index}
-                            className="p-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md"
-                        >
-                            <div className="flex justify-between">
-                                <div className="w-1/2">
-                                    <p className="font-bold text-gray-700 text-md">Kerusakan</p>
-                                    <p className="text-gray-800">{item.kerusakan}</p>
+                            <div
+                                key={index}
+                                className="p-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md"
+                            >
+                                <div className="flex justify-between">
+                                    <div className="w-1/2">
+                                        <p className="font-bold text-gray-700 text-md">Kerusakan</p>
+                                        <p className="text-gray-800">{item.kerusakan}</p>
+                                    </div>
+                                    <div className="w-1/2">
+                                        <p className="font-bold text-gray-700 text-md">Satuan</p>
+                                        <p className="text-gray-800">{item.satuan}</p>
+                                    </div>
                                 </div>
-                                <div className="w-1/2">
-                                    <p className="font-bold text-gray-700 text-md">Satuan</p>
-                                    <p className="text-gray-800">{item.satuan}</p>
+                                <div className="flex justify-between">
+                                    <div className="mt-4">
+                                        <p className="font-bold text-gray-700 text-md">Jumlah</p>
+                                        <p className="text-gray-800">{item.jumlah}</p>
+                                    </div>
+                                    <div className="flex mt-4">
+                                        <button className="mr-4 text-blue-500 hover:text-blue-700">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
+                                            </svg>
+                                            Edit
+                                        </button>
+                                        <button className="text-red-500 hover:text-red-700" onClick={() => handleDelete(item.id)}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-1.293-1.293A1 1 0 0017.414 5H6.586a1 1 0 00-.707.293L5 7m2 10h10a2 2 0 002-2V7m-2 10H7a2 2 0 01-2-2V7m0 0h12m-6 4h.01" />
+                                            </svg>
+                                            Hapus
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex justify-between">
-                                <div className="mt-4">
-                                    <p className="font-bold text-gray-700 text-md">Jumlah</p>
-                                    <p className="text-gray-800">{item.jumlah}</p>
-                                </div>
-                                <div className="flex mt-4">
-                                    <button className="mr-4 text-blue-500 hover:text-blue-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
-                                        </svg>
-                                        Edit
-                                    </button>
-                                    <button className="text-red-500 hover:text-red-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                        ))}
                 </div>
             </div>
         </>

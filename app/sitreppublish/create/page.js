@@ -240,11 +240,11 @@ export default function Sitrep() {
             });
     
             const data = await response.json();
-            console.log(data, "berhasil");
+            // console.log(data, "berhasil");
     
             if (response.ok) {
                 setMessage("Data berhasil dikirim.");
-                router.push(`./damsarpras?id=${data.ID}`); 
+                router.push(`../damsarpras/${data.ID}`);
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }

@@ -1,9 +1,16 @@
-export async function GET(req) {
+export async function DELETE(req) {
     try {
         const { searchParams } = new URL(req.url);
-        const kebutuhanSiteId = searchParams.get("kebutuhan_site_id");
-        const apiUrl = `https://humanitarian1-rz-be-dev1.cnt.id/apid/get_kebutuhan_mendesak${kebutuhanSiteId ? `?kebutuhan_site_id=${kebutuhanSiteId}` : ''}`;
-        const response = await fetch(apiUrl);
+        const id = searchParams.get("id");
+        const apiUrl = `https://humanitarian1-rz-be-dev1.cnt.id/apid/delete_jumlah_korban`;
+        const response = await fetch(apiUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id }) // Kirim ID dalam body
+        });
+
         if (!response.ok) {
             console.error(`HTTP error! status: ${response.status}`);
             return new Response(JSON.stringify({ message: 'Error fetching data from external API' }), {
