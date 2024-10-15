@@ -8,7 +8,7 @@ export default function Sitrep() {
     const { id } = useParams();
     const [dataItems, setDataItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
-    const [message, setMessage] = useState([]);
+    const [message, setMessage] = useState("");
     const [formData, setFormData] = useState({
         id: '',
         jumlah: '',
@@ -20,20 +20,33 @@ export default function Sitrep() {
         e.preventDefault();
         try {
             const payload = {
+                id: formData.id,
                 jumlah: formData.jumlah,
                 jenis_korban_jiwa: formData.jeniskorbanjiwa,
                 korban_site_id: id,
             };
-            const response = await fetch("/api/createJumlahKorban/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-            });
+
+            const response = await fetch(
+                formData.id ? "/api/updateJumlahKorban/" : "/api/createJumlahKorban/",
+                {
+                    method: formData.id ? "POST" : "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                }
+            );
+
             const data = await response.json();
             if (response.ok) {
                 setMessage("Data successfully submitted.");
+                setFormData({
+                    id: '',
+                    jumlah: '',
+                    jeniskorbanjiwa: '',
+                    korban_site_id: id,
+                });
+                setShowForm(false);
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -41,6 +54,7 @@ export default function Sitrep() {
             setMessage(`Error: ${error.message}`);
         }
     };
+
     useEffect(() => {
         async function fetchData() {
             try {
@@ -64,6 +78,8 @@ export default function Sitrep() {
             }
         }
         fetchData();
+        const intervalId = setInterval(fetchData, 1000);
+        return () => clearInterval(intervalId);
     }, [id]);
 
     const handleDelete = async (itemId) => {
@@ -79,7 +95,7 @@ export default function Sitrep() {
                 },
                 body: JSON.stringify({ id: itemId }), // Pastikan ID ada di body
             });
-    
+
             if (!response.ok) throw new Error(`Error: ${response.statusText}`);
             const data = await response.json();
             setDataItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
@@ -87,6 +103,17 @@ export default function Sitrep() {
         } catch (error) {
             setMessage(`Error: ${error.message}`);
         }
+    };
+
+    const handleEdit = (item) => {
+        setFormData({
+            id: item.id,
+            jumlah: item.jumlah,
+            kerusakan: item.kerusakan,
+            satuan: item.satuan,
+            dampak_site_id: id,
+        });
+        setShowForm(true);
     };
 
     useEffect(() => {
