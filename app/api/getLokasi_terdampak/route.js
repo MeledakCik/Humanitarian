@@ -1,8 +1,9 @@
 export async function GET(req) {
     try {
         const { searchParams } = new URL(req.url);
-        const lokasiSiteId = searchParams.get("dampak_site_id");
-        const apiUrl = `https://humanitarian1-rz-be-dev1.cnt.id/apid/get_lokasi_terdampak${lokasiSiteId ? `?lokasi_site_id=${lokasiSiteId}` : ''}`;
+        const lokasiSiteId = searchParams.get("lokasi_site_id");
+        // Panggil API eksternal tanpa parameter filter
+        const apiUrl = `https://humanitarian1-rz-be-dev1.cnt.id/apid/get_lokasi_terdampak`;
         const response = await fetch(apiUrl);
 
         if (!response.ok) {
@@ -25,8 +26,13 @@ export async function GET(req) {
             });
         }
 
-        if (data && data.status) {
-            return new Response(JSON.stringify(data), {
+        // Cek apakah data valid dan lakukan filter berdasarkan kebutuhan_site_id jika tersedia
+        if (data && data.status && Array.isArray(data.data)) {
+            const filteredData = lokasiSiteId
+                ? data.data.filter((item) => item.lokasi_site_id == lokasiSiteId)
+                : data.data;
+
+            return new Response(JSON.stringify({ status: true, data: filteredData }), {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
             });

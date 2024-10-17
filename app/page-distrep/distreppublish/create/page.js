@@ -1,75 +1,72 @@
 "use client";
-import { useRouter } from 'next/navigation';
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Select from "react-select";
+import dynamic from 'next/dynamic';
+
+const Select = dynamic(() => import('react-select'), { ssr: false });
 
 export default function Sitrep() {
-    const router = useRouter();
-    const [formData, setFormData] = useState([
-        {
-            date: "",
-            jenis_kejadian: "",
-            eventName: "",
-            pic: "",
-            provinsi: "",
-            kota: "",
-            kecamatan: "",
-            kelurahan: "",
-            address: "",
-        },
-    ]);
+    const initialFormData = {
+        id: '',
+        spk: '',
+        tanggalpenyaluran: '',
+        jeniskejadian: '',
+        namakejadian: '',
+        pic: '',
+        provinsi: '',
+        kota: '',
+        kecamatan: '',
+        kelurahan: '',
+        alamat: '',
+        jmlpm: '',
+        jmlrelawan: '',
+    };
+
+    const [formData, setFormData] = useState([initialFormData]);
     const [currentPage, setCurrentPage] = useState(0);
-    const [dataItems, setDataItems] = useState([]);
     const [message, setMessage] = useState("");
     const [provinsiOptions, setProvinsiOptions] = useState([]);
     const [kotaOptions, setKotaOptions] = useState([]);
     const [kecamatanOptions, setKecamatanOptions] = useState([]);
     const [kelurahanOptions, setKelurahanOptions] = useState([]);
-    const [jenis_kejadianOptions, setJenis_kejadianOptions] = useState([]);
-    const [pic_lapanganOptions, setPic_lapanganOptions] = useState([]);
-    
-    useEffect(() => {
-        const fetchJenis_kejadian = async () => {
-            try {
-                const response = await fetch("/api/getJenis_kejadian/");
-                if (!response.ok) throw new Error("Failed to fetch provinces");
-                const data = await response.json();
-                if (data && data.status && data.data) {
-                    const options = data.data.map((jenis_kejadian) => ({
-                        value: jenis_kejadian.id,
-                        label: jenis_kejadian.jenis_kejadian,
-                    }));
-                    setJenis_kejadianOptions(options);
-                }
-            } catch (error) {
-                console.error(error);
+    const [jenisKejadianOptions, setJenisKejadianOptions] = useState([]);
+    const [picLapanganOptions, setPicLapanganOptions] = useState([]);
+
+    const handleInputChange = (index, field, value) => {
+        const updatedData = [...formData];
+        updatedData[index][field] = value;
+        setFormData(updatedData);
+    };
+
+    const handleSelectChange = (index, field, value) => {
+        const updatedData = [...formData];
+        updatedData[index][field] = value;
+        setFormData(updatedData);
+    };
+
+    const fetchOptions = async (url, setter, labelKey = "label") => {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Failed to fetch data");
+
+            const data = await response.json();
+            if (Array.isArray(data.data)) {
+                const options = data.data.map((item) => ({
+                    value: item.id,
+                    label: item[labelKey],
+                }));
+                setter(options);
             }
-        };
-        fetchJenis_kejadian();
-    }, []);
-
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     useEffect(() => {
-        const fetchPic_lapangan = async () => {
-            try {
-                const response = await fetch("/api/getPic_lapangan/");
-                if (!response.ok) throw new Error("Failed to fetch provinces");
-                const data = await response.json();
-                if (data && data.status && data.data) {
-                    const options = data.data.map((pic_lapangan) => ({
-                        value: pic_lapangan.id,
-                        label: pic_lapangan.fullname,
-                    }));
-                    setPic_lapanganOptions(options);
-                }
-            } catch (error) {
-                console.error(error);
-            }
-        };
-        fetchPic_lapangan();
+        fetchOptions("/api/getJenis_kejadian/", setJenisKejadianOptions, "jenis_kejadian");
+        fetchOptions("/api/getPic_lapangan/", setPicLapanganOptions, "fullname");
+        fetchOptions("/api/getProvinsi/", setProvinsiOptions, "prov");
     }, []);
-
 
     useEffect(() => {
         const fetchProvinsi = async () => {
@@ -188,63 +185,34 @@ export default function Sitrep() {
         }
     }, [formData[currentPage]?.kecamatan]);
 
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                const response = await fetch('/api/getDampak_sarpras/');
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                const result = await response.json();
-
-                if (result.status) {
-                    const fetchedData = result.data.map((item) => ({
-                        jumlah: item.jumlah || "Data tidak ada",
-                        kerusakan: item.kerusakan || "Data tidak ada",
-                        dampak_site_id: item.dampak_site_id || "Data tidak ada",
-                        satuan: item.satuan || "Data tidak ada"
-                    }));
-                    setDataItems(fetchedData);
-                } else {
-                    console.error("Data tidak tersedia");
-                }
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        }
-
-        fetchData();
-    }, []);
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const payload = {
-                tanggal_kejadian: formData[currentPage].date,
-                nama_kejadian: formData[currentPage].eventName,
-                jenis_kejadian_id: formData[currentPage].jenis_kejadian,
-                pic_id: formData[currentPage].pic_lapangan,
+                no_spk: formData[currentPage].spk,
+                tanggal_penyaluran: formData[currentPage].tanggalpenyaluran,
+                jenis_kejadian_id: formData[currentPage].jeniskejadian,
+                nama_kejadian: formData[currentPage].namakejadian,
+                pic_id: formData[currentPage].pic,
                 province_id: formData[currentPage].provinsi,
                 city_id: formData[currentPage].kota,
                 district_id: formData[currentPage].kecamatan,
                 sub_district_id: formData[currentPage].kelurahan,
-                alamat_lengkap: formData[currentPage].address,
+                alamat_lengkap: formData[currentPage].alamat,
+                jml_pm: formData[currentPage].jmlpm,
+                jml_relawan: formData[currentPage].jmlrelawan,
             };
-    
-            const response = await fetch("/api/createSitrep/", {
+
+            const response = await fetch("/api/createDistrep", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             });
-    
+
             const data = await response.json();
-            // console.log(data, "berhasil");
-    
             if (response.ok) {
                 setMessage("Data berhasil dikirim.");
-                router.push(`../damsarpras/${data.ID}`);
+                router.push(`../mitra/${data.ID}`);
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -252,24 +220,17 @@ export default function Sitrep() {
             setMessage(`Error: ${error.message}`);
         }
     };
-    
-    const handleInputChange = (index, field, value) => {
-        const newFormData = [...formData];
-        newFormData[index][field] = value;
-        setFormData(newFormData);
-    };
 
-    const handleSelectChange = (index, field, value) => {
-        const newFormData = [...formData];
-        newFormData[index][field] = value;
-        setFormData(newFormData);
+    const resetForm = () => {
+        setFormData([initialFormData]);
+        setCurrentPage(0);
     };
 
     const selectStyles = {
         control: (base) => ({
             ...base,
             padding: "5px",
-            borderColor: "#30 41 59",
+            borderColor: "#E5E7EB",
             borderRadius: "5px",
             fontSize: "14px",
             width: "100%",
@@ -290,64 +251,77 @@ export default function Sitrep() {
             <nav className="w-full bg-[#ff6b00] p-6 shadow-b-lg">
                 <div className="flex mt-[10px] justify-center relative">
                     <p className="text-white font-bold text-[22px]">
-                        PUBLISH ENTRY REPORT
+                        PUBLISH DISTRIBUTION REPORT
                     </p>
                 </div>
             </nav>
+
             <div className="flex flex-col w-[380px] max-w-md">
                 <form
                     className="bg-white mt-5"
                     onSubmit={handleSubmit}
                 >
                     <div className="mb-4">
-                        <p className="mb-2">Tanggal</p>
+                        <p className="mb-2">No. SPK*</p>
                         <input
-                            type="date"
-                            value={formData[currentPage].date}
-                            onChange={(e) =>
-                                handleInputChange(currentPage, "date", e.target.value)
-                            }
-                            className="border rounded w-full text-gray-400 py-2 px-3 mb-2"
+                            type="text"
+                            placeholder="Nomor SPK"
+                            value={formData[currentPage].spk}
+                            onChange={(e) => handleInputChange(currentPage, "spk", e.target.value)}
+                            className="border rounded w-full py-2 px-3 mb-2"
                             required
                         />
-                        <p className="mb-2">Jenis Kejadian*</p>
+                        <p className="mb-2">Tanggal Penyaluran</p>
+                        <input
+                            type="date"
+                            value={formData[currentPage].tanggalpenyaluran}
+                            onChange={(e) => handleInputChange(currentPage, "tanggalpenyaluran", e.target.value)}
+                            className="border rounded text-gray-400 w-full py-2 px-3 mb-2"
+                            required
+                        />
+                        <p className="mb-2">Jenis Kejadian</p>
                         <Select name="jenis_kejadian"
-                            value={jenis_kejadianOptions.find(
-                                (option) => option.value === formData[currentPage].jenis_kejadian
-                            )}
-                            onChange={(option) =>
-                                handleSelectChange(currentPage, "jenis_kejadian", option.value)
-                            }
-                            options={jenis_kejadianOptions}
+                            value={jenisKejadianOptions.find((option) => option.value === formData[currentPage].jeniskejadian)}
+                            onChange={(option) => handleSelectChange(currentPage, "jeniskejadian", option.value)}
+                            options={jenisKejadianOptions}
                             styles={selectStyles}
                             className="mb-2"
                             placeholder="Pilih Jenis Kejadian"
                         />
-                        <p className="mb-2">Nama Kejadian</p>
+                        <p className="mb-2">Nama Kejadian*</p>
                         <input
                             type="text"
                             placeholder="Nama Kejadian"
-                            value={formData[currentPage].eventName}
-                            onChange={(e) =>
-                                handleInputChange(currentPage, "eventName", e.target.value)
-                            }
+                            value={formData[currentPage].namakejadian}
+                            onChange={(e) => handleInputChange(currentPage, "namakejadian", e.target.value)}
                             className="border rounded w-full py-2 px-3 mb-2"
                             required
                         />
-                        <p className="mb-2">Pic Lapangan*</p>
+                        <p className="mb-2">Nama PIC</p>
                         <Select name="Pic Lapangan"
-                            value={pic_lapanganOptions.find(
-                                (option) => option.value === formData[currentPage].pic_lapangan
-                            )}
-                            onChange={(option) =>
-                                handleSelectChange(currentPage, "pic_lapangan", option.value)
-                            }
-                            options={pic_lapanganOptions}
+                            value={picLapanganOptions.find((option) => option.value === formData[currentPage].pic)}
+                            onChange={(option) => handleSelectChange(currentPage, "pic", option.value)}
+                            options={picLapanganOptions}
                             styles={selectStyles}
                             className="mb-2"
                             placeholder="Pilih Pic Lapangan"
                         />
-
+                        <p className="mb-2">Jumlah Penerima Manfaat</p>
+                        <input
+                            type="number"
+                            placeholder="Jumlah Penerima Manfaat"
+                            value={formData[currentPage].jmlpm}
+                            onChange={(e) => handleInputChange(currentPage, "jmlpm", e.target.value)}
+                            className="border rounded w-full py-2 px-3 mb-2"
+                        />
+                        <p className="mb-2">Jumlah Relawan</p>
+                        <input
+                            type="number"
+                            placeholder="Jumlah Relawan"
+                            value={formData[currentPage].jmlrelawan}
+                            onChange={(e) => handleInputChange(currentPage, "jmlrelawan", e.target.value)}
+                            className="border rounded w-full py-2 px-3 mb-2"
+                        />
                         <p className="mb-2">Provinsi*</p>
                         <Select name="provinsi"
                             value={provinsiOptions.find(
@@ -375,7 +349,6 @@ export default function Sitrep() {
                             className="mb-2"
                             placeholder="Pilih Kota"
                         />
-
                         <p className="mb-2">Kecamatan*</p>
                         <Select
                             name="kecamatan"
@@ -390,7 +363,6 @@ export default function Sitrep() {
                             className="mb-2"
                             placeholder="Pilih Kecamatan"
                         />
-
                         <p className="mb-2">Kelurahan*</p>
                         <Select
                             name="kelurahan"
@@ -405,38 +377,32 @@ export default function Sitrep() {
                             className="mb-2"
                             placeholder="Pilih Kelurahan"
                         />
-
-
                         <p className="mb-2">Alamat</p>
                         <input
                             type="text"
                             placeholder="Alamat"
-                            value={formData[currentPage].address}
+                            value={formData[currentPage].alamat}
                             onChange={(e) =>
-                                handleInputChange(currentPage, "address", e.target.value)
+                                handleInputChange(currentPage, "alamat", e.target.value)
                             }
                             className="border rounded w-full py-2 px-3 mb-2"
                         />
                     </div>
-                    <div className="flex flex-row justify-between">
-                        <a href="./sitrep">
-                            <button
-                                type="button"
-                                className="bg-white border border-orange-500 font-bold text-black py-2 px-6 rounded"
-                            >
+                    <div className="flex justify-between">
+                        <Link href="../distrep" passHref>
+                            <button className="w-[100px] h-[40px] border border-orange-500 bg-white font-bold text-black rounded-lg">
                                 BACK
                             </button>
-                        </a>
+                        </Link>
                         <button
                             type="submit"
-                            className="bg-orange-500 text-white py-2 px-6 font-bold rounded"
+                            onClick={handleSubmit}
+                            className={`w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-l`}
                         >
                             SAVE
                         </button>
                     </div>
-                    {message && (
-                        <p className="mt-4 text-center text-green-500">{message}</p>
-                    )}
+                    {message && <p className="mt-4 text-red-500">{message}</p>}
                 </form>
             </div>
         </div>

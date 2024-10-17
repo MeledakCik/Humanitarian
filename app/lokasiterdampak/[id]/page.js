@@ -21,7 +21,7 @@ export default function Sitrep() {
     // useEffect(() => {
     //     async function fetchKecamatanOptions() {
     //         try {
-    //             const response = await fetch(`api/getKecamatan`);
+    //             const response = await fetch(`api/getKecamatan?city_id=` + city_id);
     //             if (response.ok) {
     //                 const result = await response.json();
     //                 const options = result.data.map((kecamatan) => ({
@@ -73,19 +73,16 @@ export default function Sitrep() {
         async function fetchData() {
             try {
                 const response = await fetch(`/api/getLokasi_terdampak?lokasi_site_id=${id}`);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                if (!response.ok) throw new Error('Network response was not ok');
                 const result = await response.json();
-
                 if (result.status) {
                     const fetchedData = result.data.map((item) => ({
                         id: item.id || "Data tidak ada",
+                        lokasi_site_id: item.lokasi_site_id || "Data tidak ada",
                         jumlah: item.jumlah || "Data tidak ada",
-                        kecamatan: item.kec_id || "Data tidak ada"
+                        kecamatan: item.kecamatan || "Data tidak ada"
                     }));
                     setDataItems(fetchedData);
-
                 } else {
                     console.error("Data tidak tersedia");
                 }
@@ -94,7 +91,10 @@ export default function Sitrep() {
             }
         }
         fetchData();
+        const intervalId = setInterval(fetchData, 4000);
+        return () => clearInterval(intervalId);
     }, [id]);
+
 
     const handleDelete = async (itemId) => {
         if (!itemId) {

@@ -20,17 +20,17 @@ export default function Sitrep() {
                 </div>
             </nav>
 
-            <div className="flex flex-col w-[400px] max-w-md min-h-screen mt-[1px]">
+            <div className="flex flex-col max-w-md min-h-screen mt-[1px]">
                 <div className="flex">
                     <button
                         onClick={() => setActiveMenu('publish')}
-                        className={`py-4 px-4 w-full ${activeMenu === 'publish' ? 'bg-orange-500 text-white' : 'bg-white text-gray-600 border border-gray-300'}`}
+                        className={`py-4 px-4 w-full ${activeMenu === 'publish' ? 'bg-orange-500 text-white' : 'bg-white text-gray-600'}`}
                     >
                         Publish
                     </button>
                     <button
                         onClick={() => setActiveMenu('draft')}
-                        className={`py-4 px-4 w-full ${activeMenu === 'draft' ? 'bg-orange-500 text-white' : 'bg-white text-gray-600 border border-gray-300'}`}
+                        className={`py-4 px-4 w-full ${activeMenu === 'draft' ? 'bg-orange-500 text-white' : 'bg-white text-gray-600'}`}
                     >
                         Draft
                     </button>

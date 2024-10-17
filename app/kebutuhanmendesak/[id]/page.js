@@ -8,7 +8,7 @@ export default function Sitrep() {
     const { id } = useParams();
     const [dataItems, setDataItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
-    const [message, setMessage] = useState([]);
+    const [message, setMessage] = useState("");
     const [formData, setFormData] = useState({
         id: '',
         jumlah: '',
@@ -17,13 +17,22 @@ export default function Sitrep() {
         kebutuhan_site_id: id
     });
 
+    const handleEdit = (item) => {
+        setFormData({
+            id: item.id,
+            jumlah: item.jumlah,
+            kebutuhanmendesak: item.kebutuhanmendesak,
+            satuan: item.satuan,
+            kebutuhan_site_id: item.kebutuhan_site_id
+        });
+        setShowForm(true);
+    };
+
     useEffect(() => {
-        if (id) {
-            setFormData((prevFormData) => ({
-                ...prevFormData,
-                kebutuhan_site_id: id,
-            }));
-        }
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            kebutuhan_site_id: id,
+        }));
     }, [id]);
 
     const handleInputChange = (e) => {
@@ -38,14 +47,12 @@ export default function Sitrep() {
         async function fetchData() {
             try {
                 const response = await fetch(`/api/getKebutuhan_mendesak/?kebutuhan_site_id=${id}`);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                if (!response.ok) throw new Error('Network response was not ok');
                 const result = await response.json();
-                console.log(result, "cek result")
                 if (result.status) {
                     const fetchedData = result.data.map((item) => ({
                         id: item.id || "Data tidak ada",
+                        kebutuhan_site_id: item.kebutuhan_site_id || "Data tidak ada",
                         jumlah: item.jumlah || "Data tidak ada",
                         kebutuhanmendesak: item.kebutuhan_mendesak || "Data tidak ada",
                         satuan: item.satuan || "Data tidak ada"
@@ -59,28 +66,43 @@ export default function Sitrep() {
             }
         }
         fetchData();
+        const intervalId = setInterval(fetchData, 4000);
+        return () => clearInterval(intervalId);
     }, [id]);
-
+    
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const payload = {
+                id: formData.id,
                 jumlah: formData.jumlah,
                 kebutuhan_mendesak: formData.kebutuhanmendesak,
                 satuan: formData.satuan,
                 kebutuhan_site_id: id,
             };
 
-            const response = await fetch("/api/createKebutuhan/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-            });
+            const response = await fetch(
+                formData.id ? "/api/updateKebutuhan" : "/api/createKebutuhan",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                }
+            );
+
             const data = await response.json();
             if (response.ok) {
-                setMessage("Data successfully submitted.");
+                setMessage("Data berhasil disimpan.");
+                setFormData({
+                    id: '',
+                    jumlah: '',
+                    kebutuhanmendesak: '',
+                    satuan: '',
+                    kebutuhan_site_id: id
+                });
+                setShowForm(false);
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -100,18 +122,17 @@ export default function Sitrep() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ id: itemId }), // Pastikan ID ada di body
+                body: JSON.stringify({ id: itemId }), 
             });
-    
+
             if (!response.ok) throw new Error(`Error: ${response.statusText}`);
-            const data = await response.json();
             setDataItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
             setMessage("Data berhasil dihapus.");
         } catch (error) {
             setMessage(`Error: ${error.message}`);
         }
     };
-    
+
     return (
         <>
             <div className="flex flex-col items-center bg-white">
@@ -199,7 +220,7 @@ export default function Sitrep() {
                                     onClick={handleSubmit}
                                     className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg"
                                 >
-                                    SAVE
+                                    {formData.id ? "UPDATE" : "SAVE"}
                                 </button>
                             </div>
                         </div>
@@ -223,7 +244,7 @@ export default function Sitrep() {
                                         <p className="font-bold text-gray-700 text-md">Satuan</p>
                                         <p className="text-gray-800">{item.satuan}</p>
                                         <div className="flex items-center mt-4">
-                                            <button className="mr-4 text-blue-500 hover:text-blue-700">
+                                            <button className="mr-4 text-blue-500 hover:text-blue-700" onClick={() => handleEdit(item)}>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
                                                 </svg>

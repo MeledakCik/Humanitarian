@@ -2,8 +2,10 @@ export async function GET(req) {
     try {
         const { searchParams } = new URL(req.url);
         const korbanSiteId = searchParams.get("korban_site_id");
-        const apiUrl = `https://humanitarian1-rz-be-dev1.cnt.id/apid/get_jumlah_korban${korbanSiteId ? `?korban_site_id=${korbanSiteId}` : ''}`;
+        // Panggil API eksternal tanpa parameter filter
+        const apiUrl = `https://humanitarian1-rz-be-dev1.cnt.id/apid/get_jumlah_korban`;
         const response = await fetch(apiUrl);
+
         if (!response.ok) {
             console.error(`HTTP error! status: ${response.status}`);
             return new Response(JSON.stringify({ message: 'Error fetching data from external API' }), {
@@ -11,6 +13,7 @@ export async function GET(req) {
                 headers: { 'Content-Type': 'application/json' }
             });
         }
+
         const text = await response.text();
         let data;
         try {
@@ -23,8 +26,13 @@ export async function GET(req) {
             });
         }
 
-        if (data && data.status) {
-            return new Response(JSON.stringify(data), {
+        // Cek apakah data valid dan lakukan filter berdasarkan kebutuhan_site_id jika tersedia
+        if (data && data.status && Array.isArray(data.data)) {
+            const filteredData = korbanSiteId
+                ? data.data.filter((item) => item.korban_site_id == korbanSiteId)
+                : data.data;
+
+            return new Response(JSON.stringify({ status: true, data: filteredData }), {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
             });

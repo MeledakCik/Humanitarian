@@ -1,11 +1,15 @@
-export async function GET(req) {
+export async function DELETE(req) {
     try {
         const { searchParams } = new URL(req.url);
-        const kebutuhanSiteId = searchParams.get("kebutuhan_site_id");
-
-        // Panggil API eksternal tanpa parameter filter
-        const apiUrl = `https://humanitarian1-rz-be-dev1.cnt.id/apid/get_kebutuhan_mendesak`;
-        const response = await fetch(apiUrl);
+        const id = searchParams.get("id");
+        const apiUrl = `https://humanitarian1-rz-be-dev1.cnt.id/apid/delete_mitra`;
+        const response = await fetch(apiUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id }) // Kirim ID dalam body
+        });
 
         if (!response.ok) {
             console.error(`HTTP error! status: ${response.status}`);
@@ -14,7 +18,6 @@ export async function GET(req) {
                 headers: { 'Content-Type': 'application/json' }
             });
         }
-
         const text = await response.text();
         let data;
         try {
@@ -26,14 +29,8 @@ export async function GET(req) {
                 headers: { 'Content-Type': 'application/json' }
             });
         }
-
-        // Cek apakah data valid dan lakukan filter berdasarkan kebutuhan_site_id jika tersedia
-        if (data && data.status && Array.isArray(data.data)) {
-            const filteredData = kebutuhanSiteId
-                ? data.data.filter((item) => item.kebutuhan_site_id == kebutuhanSiteId)
-                : data.data;
-
-            return new Response(JSON.stringify({ status: true, data: filteredData }), {
+        if (data && data.status) {
+            return new Response(JSON.stringify(data), {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -51,3 +48,4 @@ export async function GET(req) {
         });
     }
 }
+

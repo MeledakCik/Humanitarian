@@ -24,7 +24,7 @@ export default function Publish() {
                         tanggal_penyaluran: item.tanggal_penyaluran,
                         city: item.city
                     }));
-                    
+
                     setData(dataFetched);
                     setFilteredData(dataFetched);
                     setNotFound(dataFetched.length === 0);
@@ -45,19 +45,19 @@ export default function Publish() {
 
     useEffect(() => {
         const search = filter.toLowerCase();
-        const filtered = data.filter(item => 
-            (item.nama_kejadian?.toLowerCase() || "").includes(search) || 
+        const filtered = data.filter(item =>
+            (item.nama_kejadian?.toLowerCase() || "").includes(search) ||
             (item.city?.toLowerCase() || "").includes(search)
         );
         setFilteredData(filtered);
         setNotFound(filtered.length === 0);
     }, [filter, data]);
-    
+
 
     return (
         <>
             <div className="w-full flex items-center justify-between mb-4">
-                <Link href="./createdistreppublish">
+                <Link href="./distreppublish/create/">
                     <button className="w-[130px] h-[40px] bg-[#8bff7f] rounded-lg text-[13px] flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-[24px] h-[24px] mr-2">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -103,11 +103,13 @@ export default function Publish() {
                                         </div>
                                     </div>
                                     <div className="border-l border-orange-500 h-[50px] mx-2"></div>
-                                    <button className="text-gray-500 hover:text-gray-800">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-[35px] h-[35px]">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16.862 3.487a2.121 2.121 0 013.004 0l1.586 1.586a2.121 2.121 0 010 3.004l-1.586 1.586-4.588-4.588 1.586-1.586zM2 17.25V22h4.75l9.74-9.739-4.588-4.588L2 17.25z" />
-                                        </svg>
-                                    </button>
+                                    <Link href={`./distreppublish/update/${item.id}`}>
+                                        <button className="text-gray-500 hover:text-gray-800">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-[35px] h-[35px]">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16.862 3.487a2.121 2.121 0 013.004 0l1.586 1.586a2.121 2.121 0 010 3.004l-1.586 1.586-4.588-4.588 1.586-1.586zM2 17.25V22h4.75l9.74-9.739-4.588-4.588L2 17.25z" />
+                                            </svg>
+                                        </button>
+                                    </Link>
                                 </div>
                             </div>
                         ))

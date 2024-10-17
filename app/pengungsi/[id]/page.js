@@ -31,20 +31,28 @@ export default function Sitrep() {
             }));
         }
     }, [id]);
+    const handleEdit = (item) => {
+        setFormData({
+            id: item.id,
+            jumlah: item.jumlah,
+            lokasipengungsian: item.lokasipengungsian,
+            pengungsi_site_id: item.pengungsi_site_id,
+        });
+        setShowForm(true);
+    };
 
     useEffect(() => {
         async function fetchData() {
             try {
                 const response = await fetch(`/api/getPengungsian/?pengungsi_site_id=${id}`);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                if (!response.ok) throw new Error('Network response was not ok');
                 const result = await response.json();
                 if (result.status) {
                     const fetchedData = result.data.map((item) => ({
                         id: item.id || "Data tidak ada",
+                        pengungsi_site_id: item.pengungsi_site_id || "Data tidak ada",
                         jumlah: item.jumlah || "Data tidak ada",
-                        lokasipengungsian: item.lokasi_pengungsian || "Data tidak ada",
+                        lokasipengungsian: item.lokasi_pengungsian || "Data tidak ada"
                     }));
                     setDataItems(fetchedData);
                 } else {
@@ -55,27 +63,41 @@ export default function Sitrep() {
             }
         }
         fetchData();
+        const intervalId = setInterval(fetchData, 4000);
+        return () => clearInterval(intervalId);
     }, [id]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const payload = {
+                id: formData.id,
                 jumlah: formData.jumlah,
                 lokasi_pengungsian: formData.lokasipengungsian,
                 pengungsi_site_id: id,
             };
 
-            const response = await fetch("/api/createPengungsi/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-            });
+            const response = await fetch(
+                formData.id ? "/api/updatePengungsi" : "/api/createPengungsi",
+                {
+                    method: formData.id ? "POST" : "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                }
+            );
+
             const data = await response.json();
             if (response.ok) {
                 setMessage("Data successfully submitted.");
+                setFormData({
+                    id: '',
+                    jumlah: '',
+                    lokasipengungsian: '',
+                    pengungsi_site_id: id
+                });
+                setShowForm(false);
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -97,7 +119,7 @@ export default function Sitrep() {
                 },
                 body: JSON.stringify({ id: itemId }), // Pastikan ID ada di body
             });
-    
+
             if (!response.ok) throw new Error(`Error: ${response.statusText}`);
             const data = await response.json();
             setDataItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
@@ -182,7 +204,7 @@ export default function Sitrep() {
                                     onClick={handleSubmit}
                                     className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg"
                                 >
-                                    SAVE
+                                    {formData.id ? "UPDATE" : "SAVE"}
                                 </button>
                             </div>
                         </div>
@@ -205,7 +227,7 @@ export default function Sitrep() {
                                     <p className="text-gray-800">{item.jumlah}</p>
                                 </div>
                                 <div className="flex">
-                                    <button className="mr-1 text-blue-500 hover:text-blue-700">
+                                    <button className="mr-1 text-blue-500 hover:text-blue-700" onClick={() => handleEdit(item)}>
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
                                         </svg>

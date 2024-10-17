@@ -1,34 +1,80 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import Link from 'next/link';
 import Select from "react-select";
 
 export default function Sitrep() {
+    const router = useRouter();
+    const { id } = useParams();
     const [dataItems, setDataItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
-    const [clusterOptions, setClusterOptions] = useState([]);
+    const [message, setMessage] = useState("");
     const [formData, setFormData] = useState({
+        id: '',
         cluster: '',
         program: '',
         jumlah: '',
         satuan: '',
-        cluster_dist_id: '',
+        cluster_dist_id: id,
     });
+
+    const clusterOptions = [
+        { value: 'Cluster1', label: 'Cluster 1' },
+        { value: 'Cluster2', label: 'Cluster 2' },
+        { value: 'Cluster3', label: 'Cluster 3' },
+        { value: 'Cluster4', label: 'Cluster 4' },
+    ];
+
+    const handleSelectChange = (field, value) => {
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            [field]: value,
+        }));
+    };
+    const handleInputChange = (event) => {
+        const { name, value } = event.target;
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            [name]: value,
+        }));
+    };
+
+    const handleEdit = (item) => {
+        setFormData({
+            id: item.id,
+            cluster: item.cluster,
+            jumlah: item.jumlah,
+            satuan: item.satuan,
+            cluster_dist_id: item.cluster_dist_id,
+        });
+        setShowForm(true);
+    };
+
+    useEffect(() => {
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            cluster_dist_id: id,
+        }));
+    }, [id]);
 
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await fetch('/api/getCluster/');
+                const response = await fetch(`/api/getCluster?cluster_dist_id=${id}`);
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
                 const result = await response.json();
 
-                if (result.status) {
-                    const fetchedData = result.data.map((item) => ({
+                if (result.status && result.data) {
+                    const filteredData = result.data.filter(item => item.cluster_dist_id === parseInt(id));
+
+                    const fetchedData = filteredData.map((item) => ({
+                        id: item.id || "Data tidak ada",
                         cluster: item.cluster || "Data tidak ada",
                         program: item.program || "Data tidak ada",
-                        jumlah: item.jumlah !== null ? item.jumlah : "Data tidak ada",
+                        jumlah: item.jumlah  || "Data tidak ada",
                         satuan: item.satuan || "Data tidak ada",
                         cluster_dist_id: item.cluster_dist_id || "Data tidak ada"
                     }));
@@ -40,29 +86,34 @@ export default function Sitrep() {
                 console.error("Error fetching data:", error);
             }
         }
-
         fetchData();
-    }, []);
 
-    useEffect(() => {
-        const fetchCluster = async () => {
-            try {
-                const response = await fetch("/api/getCluster/");
-                if (!response.ok) throw new Error("Failed to fetch clusters");
-                const data = await response.json();
-                if (data && data.status && data.data) {
-                    const options = data.data.map((cluster_p) => ({
-                        value: cluster_p.id,
-                        label: cluster_p.cluster,
-                    }));
-                    setClusterOptions(options);
-                }
-            } catch (error) {
-                console.error("Error fetching cluster data:", error);
-            }
-        };
-        fetchCluster();
-    }, []);
+        const intervalId = setInterval(fetchData, 3000);
+        return () => clearInterval(intervalId);
+    }, [id]);
+
+    const handleDelete = async (itemId) => {
+        if (!itemId) {
+            console.error("ID tidak ditemukan:", itemId);
+            return;
+        }
+        try {
+            const response = await fetch(`/api/deleteCluster?id=${itemId}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ id: itemId }), // Pastikan ID ada di body
+            });
+
+            if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+            const data = await response.json();
+            setDataItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+            setMessage("Data berhasil dihapus.");
+        } catch (error) {
+            setMessage(`Error: ${error.message}`);
+        }
+    };
 
     const selectStyles = {
         control: (base) => ({
@@ -82,20 +133,6 @@ export default function Sitrep() {
                 color: "white",
             },
         }),
-    };
-
-    const handleSelectChange = (field, value) => {
-        setFormData((prevFormData) => ({
-            ...prevFormData,
-            [field]: value,
-        }));
-    };
-    const handleInputChange = (event) => {
-        const { name, value } = event.target;
-        setFormData((prevFormData) => ({
-            ...prevFormData,
-            [name]: value,
-        }));
     };
 
     return (
@@ -201,37 +238,62 @@ export default function Sitrep() {
                         </div>
                     </div>
                 )}
-                <div className="mt-6 space-y-4">
+
+                <div className="mt-6 space-y-4 w-[380px] max-w-md">
                     {dataItems.map((item, index) => (
                         <div
                             key={index}
-                            className="p-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md"
+                            className="p-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md space-y-3"
                         >
-                            <div className="grid grid-cols-2 gap-4">
+                            {/* Grid layout for consistent alignment */}
+                            <div className="grid grid-cols-3 gap-4">
                                 <div>
                                     <p className="font-bold text-gray-700">Cluster</p>
-                                    <p className="text-gray-800">{item.cluster}</p>
-                                </div>
-                                <div>
-                                    <p className="font-bold text-gray-700">Distribution</p>
-                                    <p className="text-gray-800">{item.cluster_dist_id}</p>
-                                </div>
-                                <div>
-                                    <p className="font-bold text-gray-700">Program</p>
-                                    <p className="text-gray-800">{item.program}</p>
-                                </div>
-                                <div>
-                                    <p className="font-bold text-gray-700">Satuan</p>
-                                    <p className="text-gray-800">{item.satuan}</p>
+                                    <p className="text-gray-800 truncate" title={item.cluster}>{item.cluster}</p>
                                 </div>
                                 <div>
                                     <p className="font-bold text-gray-700">Jumlah</p>
-                                    <p className="text-gray-800">{item.jumlah}</p>
+                                    <p className="text-gray-800 truncate" title={item.jumlah}>{item.jumlah}</p>
+                                </div>
+                                <div>
+                                    <p className="font-bold text-gray-700">Distribution</p>
+                                    <p className="text-gray-800 truncate" title={item.cluster_dist_id}>{item.cluster_dist_id}</p>
                                 </div>
                             </div>
-                            <div className="flex justify-end mt-4">
-                                <button className="mr-2 bg-blue-500 text-white px-4 py-2 rounded-lg">Edit</button>
-                                <button className="bg-red-500 text-white px-4 py-2 rounded-lg">Hapus</button>
+
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                    <p className="font-bold text-gray-700">Satuan</p>
+                                    <p className="text-gray-800 truncate" title={item.satuan}>{item.satuan}</p>
+                                </div>
+                                <div>
+                                    <p className="font-bold text-gray-700">Program</p>
+                                    <p className="text-gray-800 truncate" title={item.program}>{item.program}</p>
+                                </div>
+                                <div>
+                                    {/* Empty div to keep alignment */}
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end space-x-4 mt-4">
+                                <button
+                                    className="text-blue-500 hover:text-blue-700 flex items-center"
+                                    onClick={() => handleEdit(item)}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6 mr-1">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
+                                    </svg>
+                                    Edit
+                                </button>
+                                <button
+                                    className="text-red-500 hover:text-red-700 flex items-center"
+                                    onClick={() => handleDelete(item.id)}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6 mr-1">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-1.293-1.293A1 1 0 0017.414 5H6.586a1 1 0 00-.707.293L5 7m2 10h10a2 2 0 002-2V7m-2 10H7a2 2 0 01-2-2V7m0 0h12m-6 4h.01" />
+                                    </svg>
+                                    Hapus
+                                </button>
                             </div>
                         </div>
                     ))}
