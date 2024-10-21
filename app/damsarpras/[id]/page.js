@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 export default function Sitrep() {
     const router = useRouter();
+    const dampakSiteId = localStorage.getItem('dampak_site_id');
     const { id } = useParams();
     const [dataItems, setDataItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
@@ -16,6 +17,11 @@ export default function Sitrep() {
         satuan: '',
         dampak_site_id: id,
     });
+
+    useEffect(() => {
+        // Store dampak_site_id in local storage
+        localStorage.setItem('dampak_site_id', id);
+    }, [id]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -31,7 +37,7 @@ export default function Sitrep() {
             const response = await fetch(
                 formData.id ? "/api/updateDamsarpras" : "/api/createDamsarpras",
                 {
-                    method: formData.id ? "POST" : "POST",
+                    method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
@@ -50,7 +56,8 @@ export default function Sitrep() {
                     dampak_site_id: id,
                 });
                 setShowForm(false);
-                router.push(`../lokasiterdampak/${data?.id}`);
+                // Navigate to the next page
+                router.push(`../lokasiterdampak`);
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -220,11 +227,11 @@ export default function Sitrep() {
                                 >
                                     {formData.id ? "UPDATE" : "SAVE"}
                                 </button>
-                                <button
-                                    className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg"
-                                >
-                                    NEXT
-                                </button>
+                                <Link href="../nextPage" passHref>
+                                    <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
+                                        NEXT
+                                    </button>
+                                </Link>
                             </div>
                         </div>
                     )}
@@ -237,38 +244,21 @@ export default function Sitrep() {
                             className="p-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md"
                         >
                             <div className="flex justify-between">
-                                <div className="w-1/2">
-                                    <p className="font-bold text-gray-700 text-md">Kerusakan</p>
-                                    <p className="text-gray-800">{item.kerusakan}</p>
+                                <div>
+                                    <p className="font-bold">Kerusakan: {item.kerusakan}</p>
+                                    <p>Jumlah: {item.jumlah}</p>
+                                    <p>Satuan: {item.satuan}</p>
                                 </div>
-                                <div className="w-1/2">
-                                    <p className="font-bold text-gray-700 text-md">Satuan</p>
-                                    <p className="text-gray-800">{item.satuan}</p>
-                                </div>
-                            </div>
-                            <div className="flex justify-between">
-                                <div className="mt-4">
-                                    <p className="font-bold text-gray-700 text-md">Jumlah</p>
-                                    <p className="text-gray-800">{item.jumlah}</p>
-                                </div>
-                                <div className="flex mt-4">
-                                    <button className="mr-4 text-blue-500 hover:text-blue-700" onClick={() => handleEdit(item)}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
-                                        </svg>
-                                        Edit
-                                    </button>
-                                    <button className="text-red-500 hover:text-red-700" onClick={() => handleDelete(item.id)}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-1.293-1.293A1 1 0 0017.414 5H6.586a1 1 0 00-.707.293L5 7m2 10h10a2 2 0 002-2V7m-2 10H7a2 2 0 01-2-2V7m0 0h12m-6 4h.01" />
-                                        </svg>
-                                        Hapus
-                                    </button>
+                                <div className="flex space-x-2">
+                                    <button onClick={() => handleEdit(item)} className="text-blue-500">Edit</button>
+                                    <button onClick={() => handleDelete(item.id)} className="text-red-500">Delete</button>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
+
+                {message && <p className="mt-4 text-red-500">{message}</p>}
             </div>
         </>
     );

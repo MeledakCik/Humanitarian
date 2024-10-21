@@ -1,12 +1,11 @@
 "use client";
 import Select from 'react-select';
 import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from 'next/link';
 
 export default function Sitrep() {
     const router = useRouter();
-    const { id } = useParams();
     const [dataItems, setDataItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [message, setMessage] = useState("");
@@ -15,13 +14,32 @@ export default function Sitrep() {
         id: '',
         jumlah: '',
         kecamatan: '',
-        lokasi_site_id: id,
+        city:'',
+        lokasi_site_id: '', // Initialize as an empty string
     });
 
     useEffect(() => {
+        // Get lokasi_site_id from local storage
+        const lokasiSiteId = localStorage.getItem('dampak_site_id'); // get api sitrep menggunakan id ini .
+
+    //    const sitrepdata =  // {
+        // kecamatan : 1 , 
+        // kota : 2 
+    // }
+        if (lokasiSiteId) {
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                lokasi_site_id: lokasiSiteId, // Set from local storage
+            }));
+        }
+    }, []);
+
+    useEffect(() => {
         async function fetchKecamatanOptions() {
+            if (!formData.city) return; // Early return if city is not set
+    
             try {
-                const response = await fetch(`api/getKecamatan?city_id=` + id);
+                const response = await fetch(`api/getKecamatan?city_id=${formData.city}`);
                 if (response.ok) {
                     const result = await response.json();
                     const options = result.data.map((kecamatan) => ({
@@ -36,9 +54,12 @@ export default function Sitrep() {
                 console.error("Error fetching kecamatan data:", error);
             }
         }
-
-        fetchKecamatanOptions();
-    }, []);
+    
+        if (formData.lokasi_site_id) {
+            fetchKecamatanOptions();
+        }
+    }, [formData.lokasi_site_id, formData.city]); // Add formData.city as a dependency
+    
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -46,7 +67,7 @@ export default function Sitrep() {
             const payload = {
                 kecamatan: formData.kecamatan,
                 jumlah: formData.jumlah,
-                lokasi_site_id: id,
+                lokasi_site_id: formData.lokasi_site_id, // Use the stored lokasi_site_id
             };
 
             const response = await fetch("/api/createLokasiTerdampak/", {
@@ -60,7 +81,7 @@ export default function Sitrep() {
             const data = await response.json();
             if (response.ok) {
                 setMessage("Data berhasil disimpan.");
-                router.push(`../jumlahkorban/${id}`);
+                router.push(`../jumlahkorban/${formData.lokasi_site_id}`);
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -72,7 +93,7 @@ export default function Sitrep() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await fetch(`/api/getLokasi_terdampak?lokasi_site_id=${id}`);
+                const response = await fetch(`/api/getLokasi_terdampak?lokasi_site_id=${formData.lokasi_site_id}`);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const result = await response.json();
                 if (result.status) {
@@ -80,21 +101,25 @@ export default function Sitrep() {
                         id: item.id || "Data tidak ada",
                         lokasi_site_id: item.lokasi_site_id || "Data tidak ada",
                         jumlah: item.jumlah || "Data tidak ada",
-                        kecamatan: item.kecamatan || "Data tidak ada"
+                        city: item.city_id || "Data tidak ada",
+                        kecamatan: item.nama_kecamatan || "Data tidak ada"
                     }));
                     setDataItems(fetchedData);
                 } else {
                     console.error("Data tidak tersedia");
                 }
+                console.log(result,"ags")
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
         }
-        fetchData();
-        const intervalId = setInterval(fetchData, 4000);
-        return () => clearInterval(intervalId);
-    }, [id]);
 
+        if (formData.lokasi_site_id) {
+            fetchData();
+            const intervalId = setInterval(fetchData, 4000);
+            return () => clearInterval(intervalId);
+        }
+    }, [formData.lokasi_site_id]);
 
     const handleDelete = async (itemId) => {
         if (!itemId) {
@@ -118,13 +143,6 @@ export default function Sitrep() {
             setMessage(`Error: ${error.message}`);
         }
     };
-
-    useEffect(() => {
-        setFormData((prevFormData) => ({
-            ...prevFormData,
-            lokasi_site_id: id,
-        }));
-    }, [id]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -226,22 +244,26 @@ export default function Sitrep() {
                                 </div>
                                 <div className="flex">
                                     <button className="mr-1 text-blue-500 hover:text-blue-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m0 0l3-3m-3 3l3 3" />
                                         </svg>
-                                        Edit
                                     </button>
-                                    <button className="text-red-500 hover:text-red-700" onClick={() => handleDelete(item.id)}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M10 3h4a1 1 0 011 1v1H9V4a1 1 0 011-1z" />
+                                    <button
+                                        onClick={() => handleDelete(item.id)}
+                                        className="text-red-500 hover:text-red-700"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
-                                        Hapus
                                     </button>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
+                {message && (
+                    <p className="mt-4 text-red-600 font-bold">{message}</p>
+                )}
             </div>
         </div>
     );

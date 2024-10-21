@@ -2,10 +2,8 @@ export async function GET(req) {
     try {
         const { searchParams } = new URL(req.url);
         const lokasiSiteId = searchParams.get("lokasi_site_id");
-        // Panggil API eksternal tanpa parameter filter
         const apiUrl = `https://humanitarian1-rz-be-dev1.cnt.id/apid/get_lokasi_terdampak`;
         const response = await fetch(apiUrl);
-
         if (!response.ok) {
             console.error(`HTTP error! status: ${response.status}`);
             return new Response(JSON.stringify({ message: 'Error fetching data from external API' }), {
