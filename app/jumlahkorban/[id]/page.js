@@ -173,7 +173,12 @@ export default function Sitrep() {
                                 </button>
                             </Link>
                             <button type="submit" onClick={handleSubmit} className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg">
-                                    {formData.id ? "UPDATE" : "SAVE"}
+                                {formData.id ? "UPDATE" : "SAVE"}
+                            </button>
+                            <button
+                                className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg"
+                            >
+                                NEXT
                             </button>
                         </div>
                     </form>

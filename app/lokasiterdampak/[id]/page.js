@@ -204,6 +204,11 @@ export default function Sitrep() {
                             >
                                 SAVE
                             </button>
+                            <button
+                                className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg"
+                            >
+                                NEXT
+                            </button>
                         </div>
                     </form>
                 )}

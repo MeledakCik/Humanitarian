@@ -109,7 +109,7 @@ export default function Sitrep() {
                     throw new Error('Network response was not ok');
                 }
                 const result = await response.json();
-    
+
                 if (result.status) {
                     const fetchedData = result.data.map((item) => ({
                         id: item.id || "Data tidak ada",
@@ -219,6 +219,11 @@ export default function Sitrep() {
                                     className="bg-orange-500 text-white py-2 px-6 font-bold rounded"
                                 >
                                     {formData.id ? "UPDATE" : "SAVE"}
+                                </button>
+                                <button
+                                    className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg"
+                                >
+                                    NEXT
                                 </button>
                             </div>
                         </div>

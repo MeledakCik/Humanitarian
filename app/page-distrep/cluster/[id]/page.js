@@ -46,6 +46,7 @@ export default function Sitrep() {
             cluster: item.cluster,
             jumlah: item.jumlah,
             satuan: item.satuan,
+            program: item.program,
             cluster_dist_id: item.cluster_dist_id,
         });
         setShowForm(true);
@@ -74,7 +75,7 @@ export default function Sitrep() {
                         id: item.id || "Data tidak ada",
                         cluster: item.cluster || "Data tidak ada",
                         program: item.program || "Data tidak ada",
-                        jumlah: item.jumlah  || "Data tidak ada",
+                        jumlah: item.jumlah || "Data tidak ada",
                         satuan: item.satuan || "Data tidak ada",
                         cluster_dist_id: item.cluster_dist_id || "Data tidak ada"
                     }));
@@ -110,6 +111,37 @@ export default function Sitrep() {
             const data = await response.json();
             setDataItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
             setMessage("Data berhasil dihapus.");
+        } catch (error) {
+            setMessage(`Error: ${error.message}`);
+        }
+    };
+
+    const handleSubmit = async () => {
+        const url = formData.id ? `/api/updateCluster?id=${formData.id}` : "/api/createCluster";
+        const method = formData.id ? "POST" : "POST";
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+            const data = await response.json();
+
+            if (formData.id) {
+                setDataItems((prevItems) =>
+                    prevItems.map((item) => (item.id === formData.id ? data : item))
+                );
+            } else {
+                setDataItems((prevItems) => [...prevItems, data]);
+            }
+
+            setMessage("Data berhasil disimpan.");
+            setShowForm(false);
         } catch (error) {
             setMessage(`Error: ${error.message}`);
         }
@@ -207,21 +239,6 @@ export default function Sitrep() {
                                     className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
                                 />
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700">Distribution*</label>
-                                <select
-                                    name="distribution"
-                                    value={formData.cluster_dist_id}
-                                    onChange={handleInputChange}
-                                    className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
-                                >
-                                    <option value="">Please select...</option>
-                                    <option value="Distribution1">Distribution 1</option>
-                                    <option value="Distribution2">Distribution 2</option>
-                                </select>
-                            </div>
-
                             <div className="flex justify-between">
                                 <button
                                     onClick={() => setShowForm(false)}
@@ -230,9 +247,15 @@ export default function Sitrep() {
                                     BACK
                                 </button>
                                 <button
+                                    onClick={handleSubmit}
                                     className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg"
                                 >
-                                    SAVE
+                                    {formData.id ? "UPDATE" : "SAVE"}
+                                </button>
+                                <button
+                                    className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg"
+                                >
+                                    NEXT
                                 </button>
                             </div>
                         </div>

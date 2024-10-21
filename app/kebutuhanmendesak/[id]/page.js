@@ -69,7 +69,7 @@ export default function Sitrep() {
         const intervalId = setInterval(fetchData, 4000);
         return () => clearInterval(intervalId);
     }, [id]);
-    
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -122,7 +122,7 @@ export default function Sitrep() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ id: itemId }), 
+                body: JSON.stringify({ id: itemId }),
             });
 
             if (!response.ok) throw new Error(`Error: ${response.statusText}`);
@@ -221,6 +221,11 @@ export default function Sitrep() {
                                     className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg"
                                 >
                                     {formData.id ? "UPDATE" : "SAVE"}
+                                </button>
+                                <button
+                                    className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg"
+                                >
+                                    NEXT
                                 </button>
                             </div>
                         </div>
