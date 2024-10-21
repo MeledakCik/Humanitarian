@@ -18,27 +18,27 @@ export default function Sitrep() {
         lokasi_site_id: id,
     });
 
-    // useEffect(() => {
-    //     async function fetchKecamatanOptions() {
-    //         try {
-    //             const response = await fetch(`api/getKecamatan?city_id=` + city_id);
-    //             if (response.ok) {
-    //                 const result = await response.json();
-    //                 const options = result.data.map((kecamatan) => ({
-    //                     value: kecamatan.id,
-    //                     label: kecamatan.kec_id,
-    //                 }));
-    //                 setKecamatanOptions(options);
-    //             } else {
-    //                 console.error("Failed to fetch kecamatan data");
-    //             }
-    //         } catch (error) {
-    //             console.error("Error fetching kecamatan data:", error);
-    //         }
-    //     }
+    useEffect(() => {
+        async function fetchKecamatanOptions() {
+            try {
+                const response = await fetch(`api/getKecamatan?city_id=` + id);
+                if (response.ok) {
+                    const result = await response.json();
+                    const options = result.data.map((kecamatan) => ({
+                        value: kecamatan.id,
+                        label: kecamatan.kec_id,
+                    }));
+                    setKecamatanOptions(options);
+                } else {
+                    console.error("Failed to fetch kecamatan data");
+                }
+            } catch (error) {
+                console.error("Error fetching kecamatan data:", error);
+            }
+        }
 
-    //     fetchKecamatanOptions();
-    // }, []);
+        fetchKecamatanOptions();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
