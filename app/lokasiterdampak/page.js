@@ -9,7 +9,9 @@ export default function Sitrep() {
     const [dataItems, setDataItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [message, setMessage] = useState("");
+    const [sitrepData, setSitrepData] = useState([]);
     const [kecamatanOptions, setKecamatanOptions] = useState([]);
+    const [siteID , setSiteID] = useState('')
     const [formData, setFormData] = useState({
         id: '',
         jumlah: '',
@@ -17,29 +19,13 @@ export default function Sitrep() {
         city: '',
         lokasi_site_id: '', // Initialize as an empty string
     });
-
-    useEffect(() => {
-        // Get lokasi_site_id from local storage
-        const lokasiSiteId = localStorage.getItem('dampak_site_id'); // get api sitrep menggunakan id ini .
-
-        //    const sitrepdata =  // {
-        // kecamatan : 1 , 
-        // kota : 2 
-        // }
-        if (lokasiSiteId) {
-            setFormData((prevFormData) => ({
-                ...prevFormData,
-                lokasi_site_id: lokasiSiteId, // Set from local storage
-            }));
-        }
-    }, []);
-
+    
     useEffect(() => {
         async function fetchKecamatanOptions() {
             if (!formData.city) return; // Early return if city is not set
 
             try {
-                const response = await fetch(`api/getKecamatan?city_id=${formData.city}`);
+                const response = await fetch(`/api/getKecamatan?city_id=${formData.city}`);
                 if (response.ok) {
                     const result = await response.json();
                     const options = result.data.map((kecamatan) => ({
@@ -55,10 +41,48 @@ export default function Sitrep() {
             }
         }
 
-        if (formData.lokasi_site_id) {
+        // Call fetch only if city or lokasi_site_id is set
+        if (formData.city || formData.lokasi_site_id) {
             fetchKecamatanOptions();
         }
-    }, [formData.lokasi_site_id, formData.city]); // Add formData.city as a dependency
+    }, [formData.city, formData.lokasi_site_id]); // Dependencies on city and lokasi_site_id
+
+    // Fetch sitrep data on component mount
+    useEffect(() => {
+        setSiteID(localStorage.getItem('dampak_site_id')); // get api sitrep menggunakan id ini .
+        const fetchData = async () => {
+            
+            try {
+                
+                const response = await fetch(`/api/getSitrep?id=${siteID}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const result = await response.json();
+                if (result.statusCode === 200) {
+                    setSitrepData(result); // Save fetched data to sitrepData state
+                } else {
+                    console.error("Data tidak tersedia");
+                }
+                
+            } catch (error) {
+                console.error("Error fetching sitrep data:", error);
+            }
+        };
+        setTimeout(()=> {
+            if(siteID){
+                fetchData();// Fetch sitrep data on component mount
+            }
+        },500)
+
+        if (siteID) {
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                lokasi_site_id: siteID, // Set from local storage
+            }));
+        }
+
+    }, [siteID]);
 
 
     const handleSubmit = async (e) => {
@@ -116,8 +140,6 @@ export default function Sitrep() {
 
         if (formData.lokasi_site_id) {
             fetchData();
-            const intervalId = setInterval(fetchData, 4000);
-            return () => clearInterval(intervalId);
         }
     }, [formData.lokasi_site_id]);
 
@@ -155,10 +177,10 @@ export default function Sitrep() {
     const handleSelectChange = (selectedOption) => {
         setFormData({
             ...formData,
-            kecamatan: selectedOption,
+            kecamatan: selectedOption.value, // ambil value kecamatan
         });
     };
-
+    
     return (
         <div className="flex flex-col items-center bg-white">
             <nav className="w-full bg-[#ff6b00] p-6 shadow-b-lg">

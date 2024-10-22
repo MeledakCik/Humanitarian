@@ -14,6 +14,7 @@ export async function GET(req) {
         if(id) {
             url = url + '?id=' + id
         }
+        console.log(url,"url coy    ")
         
         // tanyaken ka si riski bisa teu di cek by id
         const response = await fetch(url);
