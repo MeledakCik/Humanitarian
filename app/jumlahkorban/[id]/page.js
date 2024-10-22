@@ -167,18 +167,17 @@ export default function Sitrep() {
                             />
                         </div>
                         <div className="flex justify-between">
-                            <Link href="../lokasiterdampak" passHref>
-                                <button type="button" className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
-                                    BACK
+                            <Link href="../sitrep" passHref>
+                                <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
+                                    RESET
                                 </button>
                             </Link>
-                            <button type="submit" onClick={handleSubmit} className="w-[100px] h-[40px] bg-[#ff6b00] font-bold text-white rounded-lg">
-                                {formData.id ? "UPDATE" : "SAVE"}
-                            </button>
                             <button
-                                className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg"
+                                type="submit"
+                                onClick={handleSubmit}
+                                className="bg-orange-500 text-white py-2 px-6 font-bold rounded"
                             >
-                                NEXT
+                                {formData.id ? "UPDATE" : "SAVE"}
                             </button>
                         </div>
                     </form>
@@ -207,6 +206,18 @@ export default function Sitrep() {
                             </div>
                         </div>
                     ))}
+                    <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-[190px] p-6 bg-white shadow-lg">
+                        <Link href="../sitrep" passHref>
+                            <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
+                                BACK
+                            </button>
+                        </Link>
+                        <Link href="../nextPage" passHref>
+                            <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
+                                NEXT
+                            </button>
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>

@@ -14,7 +14,7 @@ export default function Sitrep() {
         id: '',
         jumlah: '',
         kecamatan: '',
-        city:'',
+        city: '',
         lokasi_site_id: '', // Initialize as an empty string
     });
 
@@ -22,10 +22,10 @@ export default function Sitrep() {
         // Get lokasi_site_id from local storage
         const lokasiSiteId = localStorage.getItem('dampak_site_id'); // get api sitrep menggunakan id ini .
 
-    //    const sitrepdata =  // {
+        //    const sitrepdata =  // {
         // kecamatan : 1 , 
         // kota : 2 
-    // }
+        // }
         if (lokasiSiteId) {
             setFormData((prevFormData) => ({
                 ...prevFormData,
@@ -37,7 +37,7 @@ export default function Sitrep() {
     useEffect(() => {
         async function fetchKecamatanOptions() {
             if (!formData.city) return; // Early return if city is not set
-    
+
             try {
                 const response = await fetch(`api/getKecamatan?city_id=${formData.city}`);
                 if (response.ok) {
@@ -54,12 +54,12 @@ export default function Sitrep() {
                 console.error("Error fetching kecamatan data:", error);
             }
         }
-    
+
         if (formData.lokasi_site_id) {
             fetchKecamatanOptions();
         }
     }, [formData.lokasi_site_id, formData.city]); // Add formData.city as a dependency
-    
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -108,7 +108,7 @@ export default function Sitrep() {
                 } else {
                     console.error("Data tidak tersedia");
                 }
-                console.log(result,"ags")
+                console.log(result, "ags")
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
@@ -211,21 +211,17 @@ export default function Sitrep() {
                         </div>
 
                         <div className="flex justify-between mt-[50px]">
-                            <Link href="../dampaksarpras">
+                            <Link href="../sitrep" passHref>
                                 <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
-                                    BACK
+                                    RESET
                                 </button>
                             </Link>
                             <button
                                 type="submit"
+                                onClick={handleSubmit}
                                 className="bg-orange-500 text-white py-2 px-6 font-bold rounded"
                             >
-                                SAVE
-                            </button>
-                            <button
-                                className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg"
-                            >
-                                NEXT
+                                {formData.id ? "UPDATE" : "SAVE"}
                             </button>
                         </div>
                     </form>
@@ -260,6 +256,18 @@ export default function Sitrep() {
                             </div>
                         </div>
                     ))}
+                    <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-[190px] p-6 bg-white shadow-lg">
+                        <Link href="../sitrep" passHref>
+                            <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
+                                BACK
+                            </button>
+                        </Link>
+                        <Link href="../nextPage" passHref>
+                            <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
+                                NEXT
+                            </button>
+                        </Link>
+                    </div>
                 </div>
                 {message && (
                     <p className="mt-4 text-red-600 font-bold">{message}</p>

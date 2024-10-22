@@ -5,7 +5,6 @@ import Link from 'next/link';
 
 export default function Sitrep() {
     const router = useRouter();
-    const dampakSiteId = localStorage.getItem('dampak_site_id');
     const { id } = useParams();
     const [dataItems, setDataItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
@@ -217,7 +216,7 @@ export default function Sitrep() {
                             <div className="flex justify-between">
                                 <Link href="../sitrep" passHref>
                                     <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
-                                        BACK
+                                        RESET
                                     </button>
                                 </Link>
                                 <button
@@ -227,11 +226,6 @@ export default function Sitrep() {
                                 >
                                     {formData.id ? "UPDATE" : "SAVE"}
                                 </button>
-                                <Link href="../nextPage" passHref>
-                                    <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
-                                        NEXT
-                                    </button>
-                                </Link>
                             </div>
                         </div>
                     )}
@@ -256,8 +250,19 @@ export default function Sitrep() {
                             </div>
                         </div>
                     ))}
+                    <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-[190px] p-6 bg-white shadow-lg">
+                        <Link href="../sitrep" passHref>
+                            <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
+                                BACK
+                            </button>
+                        </Link>
+                        <Link href="../nextPage" passHref>
+                            <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
+                                NEXT
+                            </button>
+                        </Link>
+                    </div>
                 </div>
-
                 {message && <p className="mt-4 text-red-500">{message}</p>}
             </div>
         </>
