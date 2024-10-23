@@ -22,6 +22,7 @@ export default function Sitrep() {
         city: '',
         lokasi_site_id: '',
     });
+
     useEffect(() => {
         const storedID = localStorage.getItem('id');
         if (id) {
@@ -60,7 +61,7 @@ export default function Sitrep() {
 
     // Fetch sitrep data on component mount
     useEffect(() => {
-        setSiteID(localStorage.getItem('dampak_site_id'));
+        setSiteID(localStorage.getItem('dampak_site_id')); // get api sitrep menggunakan id ini .
         const fetchData = async () => {
             try {
                 const response = await fetch(`/api/getSitrep?id=${siteID}`);
@@ -68,43 +69,45 @@ export default function Sitrep() {
                     throw new Error('Network response was not ok');
                 }
                 const result = await response.json();
+                console.log(result)
                 if (result.statusCode === 200) {
-                    const sitrep = result.data.data[0];
-                    setFormData({
-                        ...formData,
-                        lokasi_site_id: sitrep.id,
-                        kecamatan: { value: sitrep.district_id, label: sitrep.district_name }, // Fix kecamatan object
-                        city: sitrep.city_id,
-                        jumlah: sitrep.jumlah || '', // Handle missing 'jumlah' gracefully
-                    });
-                    setSitrepData(result);
-                    setCityID(sitrep.city_id);
+                    setCityID(result.data.data[0].city_id)
+                    formData['lokasi_site_id'] = result.data.data[0].id
+                    formData['kecamatan'] = result.data.data[0].district_id
+                    formData['city'] = result.data.data[0].city_id
+                    setFormData(formData)
+                    setSitrepData(result); // Save fetched data to sitrepData state
                 } else {
                     console.error("Data tidak tersedia");
                 }
+
             } catch (error) {
                 console.error("Error fetching sitrep data:", error);
             }
         };
+        setTimeout(() => {
+            if (siteID) {
+                fetchData();// Fetch sitrep data on component mount
+            }
+        }, 500)
 
         if (siteID) {
-            fetchData();
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                lokasi_site_id: siteID, // Set from local storage
+            }));
         }
+
     }, [siteID]);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
 
-        if (!formData.id) {
-            setMessage("ID is missing.");
-            return;
-        }
 
         try {
             const payload = {
-                id: formData.id,
-                kecamatan: formData.kecamatan,
+                kec_id: formData.kecamatan.value,
                 jumlah: formData.jumlah,
                 lokasi_site_id: formData.lokasi_site_id,
             };
@@ -124,7 +127,6 @@ export default function Sitrep() {
             if (response.ok) {
                 setMessage("Data successfully submitted.");
                 setFormData({
-                    id: '',
                     jumlah: '',
                     kecamatan: '',
                     city: '',
@@ -139,6 +141,36 @@ export default function Sitrep() {
             setMessage(`Error: ${error.message}`);
         }
     };
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const response = await fetch(`/api/getLokasi_terdampak?lokasi_site_id=${formData.lokasi_site_id}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const result = await response.json();
+                if (result.status) {
+                    const fetchedData = result.data.map((item) => ({
+                        id: item.id || "Data tidak ada",
+                        lokasi_site_id: item.lokasi_site_id || "Data tidak ada",
+                        jumlah: item.jumlah || "Data tidak ada",
+                        city: item.city_id || "Data tidak ada",
+                        kecamatan: item.nama_kecamatan || "Data tidak ada"
+                    }));
+                    setDataItems(fetchedData);
+                } else {
+                    console.error("Data tidak tersedia");
+                }
+                console.log(result, "ags")
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        }
+
+        if (formData.lokasi_site_id) {
+            fetchData();
+        }
+    }, [formData.lokasi_site_id]);
+
 
     const handleEdit = (item) => {
         setFormData({
@@ -160,6 +192,7 @@ export default function Sitrep() {
     };
 
     const handleSelectChange = (selectedOption) => {
+        console.log(selectedOption)
         setFormData({
             ...formData,
             kecamatan: selectedOption,

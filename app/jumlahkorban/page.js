@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from 'next/link';
 
@@ -9,12 +9,35 @@ export default function Sitrep() {
     const [dataItems, setDataItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [message, setMessage] = useState("");
+    const [isSubmit, setIsSubmit] = useState(false)
+    const [allData, setAllData] = useState([]); // All data fetched
+    const [currentIndex, setCurrentIndex] = useState(0); // Current index for pagination
+    const containerRef = useRef(null);
+    const [storedKorbanSiteId, setStoredKorbanSiteId] = useState(localStorage.getItem('dampak_site_id') || null);
     const [formData, setFormData] = useState({
         id: '',
         jumlah: '',
         jeniskorbanjiwa: '',
-        korban_site_id: id,
+        korban_site_id: '',  // Initially empty, to be filled from localStorage
     });
+
+    // Fetch korban_site_id from localStorage
+    useEffect(() => {
+        if (storedKorbanSiteId) {
+            setFormData((prevData) => ({
+                ...prevData,
+                korban_site_id: storedKorbanSiteId,
+            }));
+        } else if (id) {
+            // Store the current id in localStorage for future use
+            localStorage.setItem('dampak_site_id', id);
+            setFormData((prevData) => ({
+                ...prevData,
+                korban_site_id: id,
+            }));
+        }
+    }, [id]);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -23,7 +46,7 @@ export default function Sitrep() {
                 id: formData.id,
                 jumlah: formData.jumlah,
                 jenis_korban_jiwa: formData.jeniskorbanjiwa,
-                korban_site_id: id,
+                korban_site_id: storedKorbanSiteId,
             };
 
             const response = await fetch(
@@ -36,17 +59,18 @@ export default function Sitrep() {
                     body: JSON.stringify(payload),
                 }
             );
-
+            setIsSubmit(true)
             const data = await response.json();
             if (response.ok) {
                 setMessage("Data successfully submitted.");
                 setFormData({
-                    id: '',
                     jumlah: '',
                     jeniskorbanjiwa: '',
-                    korban_site_id: id,
+                    korban_site_id: '',
                 });
                 setShowForm(false);
+                router.push(`../pengungsi`);
+                setIsSubmit(false)
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -57,29 +81,30 @@ export default function Sitrep() {
 
     useEffect(() => {
         async function fetchData() {
-            try {
-                const response = await fetch(`/api/getJumlah_korban?korban_site_id=${id}`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const result = await response.json();
-                if (result.status) {
-                    const fetchedData = result.data.map((item) => ({
-                        id: item.id || "Data tidak ada",
-                        korban_site_id: item.korban_site_id || "Data tidak ada",
-                        jumlah: item.jumlah || "Data tidak ada",
-                        jeniskorbanjiwa: item.jenis_korban_jiwa || "Data tidak ada",
-                    }));
-                    setDataItems(fetchedData);
-                } else {
-                    console.error("Data tidak tersedia");
+            if (storedKorbanSiteId) {
+                try {
+                    const response = await fetch(`/api/getJumlah_korban?korban_site_id=${storedKorbanSiteId}`);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const result = await response.json();
+                    if (result.status) {
+                        const fetchedData = result.data.map((item) => ({
+                            id: item.id || "Data tidak ada",
+                            korban_site_id: item.korban_site_id || "Data tidak ada",
+                            jumlah: item.jumlah || "Data tidak ada",
+                            jeniskorbanjiwa: item.jenis_korban_jiwa || "Data tidak ada",
+                        }));
+                        setDataItems(fetchedData);
+                    } else {
+                        console.error("Data tidak tersedia");
+                    }
+                } catch (error) {
+                    console.error("Error fetching data:", error);
                 }
-            } catch (error) {
-                console.error("Error fetching data:", error);
             }
         }
         fetchData();
-        const intervalId = setInterval(fetchData, 4000);
-        return () => clearInterval(intervalId);
-    }, [id]);
+    }, [storedKorbanSiteId, isSubmit]);
+
 
     const handleDelete = async (itemId) => {
         if (!itemId) return;
@@ -117,6 +142,34 @@ export default function Sitrep() {
             [name]: value,
         }));
     };
+
+    useEffect(() => {
+        const newItems = allData.slice(currentIndex, currentIndex + 5);
+        setDataItems(prevItems => [...prevItems, ...newItems]);
+    }, [allData, currentIndex]);
+
+    // Handle scroll event
+    const handleScroll = () => {
+        const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+        if (scrollTop + clientHeight >= scrollHeight - 5) { // Load more when scrolled near the bottom
+            if (currentIndex + 5 < allData.length) { // Check if more data is available
+                setCurrentIndex(prevIndex => prevIndex + 5);
+            }
+        }
+    };
+
+    // Attach scroll event listener
+    useEffect(() => {
+        const currentContainer = containerRef.current;
+        if (currentContainer) {
+            currentContainer.addEventListener('scroll', handleScroll);
+        }
+        return () => {
+            if (currentContainer) {
+                currentContainer.removeEventListener('scroll', handleScroll);
+            }
+        };
+    }, [currentIndex]);
 
     return (
         <div className="flex flex-col items-center bg-white">
@@ -183,7 +236,7 @@ export default function Sitrep() {
                     </form>
                 )}
 
-                <div className="mt-7">
+                <div className="mt-7 overflow-y-auto" ref={containerRef} style={{ height: '500px', paddingBottom: '80px' }}> {/* Added padding for the fixed button */}
                     {dataItems.map((item, index) => (
                         <div key={index} className="p-4 mt-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md">
                             <div className="flex justify-between">
@@ -206,18 +259,18 @@ export default function Sitrep() {
                             </div>
                         </div>
                     ))}
-                    <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-[190px] p-6 bg-white shadow-lg">
-                        <Link href="../sitrep" passHref>
-                            <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
-                                BACK
-                            </button>
-                        </Link>
-                        <Link href="../nextPage" passHref>
-                            <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
-                                NEXT
-                            </button>
-                        </Link>
-                    </div>
+                </div>
+                <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-[190px] p-6 bg-white shadow-lg">
+                    <Link href="../sitrep" passHref>
+                        <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
+                            BACK
+                        </button>
+                    </Link>
+                    <Link href="../nextPage" passHref>
+                        <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
+                            NEXT
+                        </button>
+                    </Link>
                 </div>
             </div>
         </div>

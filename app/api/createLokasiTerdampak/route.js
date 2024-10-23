@@ -10,7 +10,7 @@ export async function POST(req) {
             body: JSON.stringify(requestBody),
         });
 
-        // console.log(response ,"iki mid cupu")
+        console.log(response ,"iki mid cupu")
         if (!response.ok) {
             console.error(`HTTP error! status: ${response.status}`);
             return new Response(JSON.stringify({ message: 'Error fetching data from external API' }), {

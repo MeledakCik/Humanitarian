@@ -1,31 +1,28 @@
-
 export async function POST(req) {
     try {
-        const requestBody = await req.json(); // Parse the JSON body
-        console.log("Final payload to API:", JSON.stringify(requestBody));
-        const response = await fetch('https://humanitarian1-rz-be-dev1.cnt.id/apid/update_jumlah_korban',{
+        const requestBody = await req.json();
+        console.log("Incoming request body:", requestBody);
+
+        const response = await fetch('https://humanitarian1-rz-be-dev1.cnt.id/apid/update_jumlah_korban', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify(requestBody),
         });
 
-        // console.log(response ,"iki mid cupu")
         if (!response.ok) {
-            console.error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error(`HTTP error! Status: ${response.status}, Response: ${errorText}`);
             return new Response(JSON.stringify({ message: 'Error fetching data from external API' }), {
                 status: response.status,
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 }
             });
         }
 
-        const text = await response.text(); // Get the raw response as text
-        console.log("Raw response from API:", text); // Log the raw response
-
-        // Try parsing the response as JSON
+        const text = await response.text();
         let data;
         try {
             data = JSON.parse(text);
@@ -34,17 +31,16 @@ export async function POST(req) {
             return new Response(JSON.stringify({ message: 'Error parsing data from external API' }), {
                 status: 500,
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 }
             });
         }
 
-        console.log("Data yang diterima dari API:", data);
         if (data && data.status) {
             return new Response(JSON.stringify(data), {
                 status: 200,
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 }
             });
         } else {
@@ -52,16 +48,16 @@ export async function POST(req) {
             return new Response(JSON.stringify({ message: 'Data tidak tersedia' }), {
                 status: 404,
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 }
             });
         }
     } catch (error) {
-        console.error("Error fetching data:", error); // Log the error for debugging
+        console.error("Error fetching data:", error);
         return new Response(JSON.stringify({ message: 'Internal Server Error' }), {
             status: 500,
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             }
         });
     }
