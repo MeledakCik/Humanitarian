@@ -112,14 +112,13 @@ export default function Sitrep() {
             if (response.ok) {
                 setMessage("Data berhasil disimpan.");
                 setFormData({
-                    id: '',
                     jumlah: '',
                     kebutuhanmendesak: '',
                     satuan: '',
                     kebutuhan_site_id: id
                 });
                 setShowForm(false);
-                router.push(`../sitrep`);
+                // router.push(`../sitrep`);
                 setIsSubmit(false)
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
@@ -179,18 +178,6 @@ export default function Sitrep() {
                     {showForm && (
                         <div className="mt-[10px] bg-white rounded-lg" onSubmit={handleSubmit}>
                             <div className="mb-4">
-                                <label className="block text-[14px] font-bold text-gray-700">Kebutuhan Mendesak Site ID*</label>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        name="kebutuhan_site_id"
-                                        value={formData.kebutuhan_site_id}
-                                        className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
-                                        readOnly
-                                    />
-                                </div>
-                            </div>
-                            <div className="mb-4">
                                 <label className="block text-[14px] font-bold text-gray-700">Kebutuhan Mendesak*</label>
                                 <div className="relative">
                                     <input
@@ -240,7 +227,7 @@ export default function Sitrep() {
                                 >
                                     {formData.id ? "UPDATE" : "SAVE"}
                                 </button>
-                            </div>Í
+                            </div>
                         </div>
                     )}
 
@@ -261,18 +248,18 @@ export default function Sitrep() {
                                     <div className="w-1/4 flex flex-col">
                                         <p className="font-bold text-gray-700 text-md">Satuan</p>
                                         <p className="text-gray-800">{item.satuan}</p>
-                                        <div className="flex items-center mt-4">
-                                            <button className="mr-4 text-blue-500 hover:text-blue-700" onClick={() => handleEdit(item)}>
+                                        <div className="flex">
+                                            <button className="mr-1 text-blue-500 hover:text-blue-700" onClick={() => handleEdit(item)}>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
                                                 </svg>
                                                 Edit
                                             </button>
-                                            <button className="text-red-500 hover:text-red-700" onClick={() => handleDelete(item.id)}>
+                                            <button className="text-red-500 hover:text-red-700" onClick={() => handleDelete(item.id)} >
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M10 3h4a1 1 0 011 1v1H9V4a1 1 0 011-1z" />
                                                 </svg>
-                                                Delete
+                                                Hapus
                                             </button>
                                         </div>
                                     </div>
@@ -285,7 +272,7 @@ export default function Sitrep() {
                                     BACK
                                 </button>
                             </Link>
-                            <Link href="../nextPage" passHref>
+                            <Link href="../dockument" passHref>
                                 <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
                                     NEXT
                                 </button>

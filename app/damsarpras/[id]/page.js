@@ -1,13 +1,18 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from 'next/link';
 
 export default function Sitrep() {
     const router = useRouter();
+    const [isSubmit, setIsSubmit] = useState(false)
     const { id } = useParams();
     const [dataItems, setDataItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
+    const [allData, setAllData] = useState([]); // All data fetched
+    const [currentIndex, setCurrentIndex] = useState(0); // Current index for pagination
+    const containerRef = useRef(null);
+    const [storedKorbanSiteId, setStoredKorbanSiteId] = useState(localStorage.getItem('dampak_site_id') || null);
     const [message, setMessage] = useState("");
     const [formData, setFormData] = useState({
         id: '',
@@ -43,6 +48,7 @@ export default function Sitrep() {
                     body: JSON.stringify(payload),
                 }
             );
+            setIsSubmit(true)
 
             const data = await response.json();
             if (response.ok) {
@@ -55,8 +61,9 @@ export default function Sitrep() {
                     dampak_site_id: id,
                 });
                 setShowForm(false);
+                setIsSubmit(false)
                 // Navigate to the next page
-                router.push(`../lokasiterdampak`);
+                // router.push(`../lokasiterdampak`);
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -132,9 +139,7 @@ export default function Sitrep() {
             }
         }
         fetchData();
-        const intervalId = setInterval(fetchData, 1000);
-        return () => clearInterval(intervalId);
-    }, [id]);
+    }, [storedKorbanSiteId, isSubmit]);
 
     return (
         <>
@@ -163,18 +168,6 @@ export default function Sitrep() {
 
                     {showForm && (
                         <div className="space-y-4 bg-white w-[380px] max-w-md rounded-md" onSubmit={handleSubmit}>
-                            <div className="mb-4">
-                                <label className="block text-[14px] font-bold text-gray-700">Dampak Site Id</label>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        name="dampak_site_id"
-                                        value={formData.dampak_site_id}
-                                        className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
-                                        readOnly
-                                    />
-                                </div>
-                            </div>
                             <div className="mb-4">
                                 <label className="block text-[14px] font-bold text-gray-700">Jumlah*</label>
                                 <div className="relative">
@@ -231,37 +224,51 @@ export default function Sitrep() {
                     )}
                 </div>
 
-                <div className="mt-6 space-y-4 w-[380px] max-w-md">
+                <div className="mt-7 space-y-4 w-[380px] max-w-md overflow-y-auto" ref={containerRef} style={{ height: '500px', paddingBottom: '80px' }}> {/* Added padding for the fixed button */}
                     {dataItems.map((item, index) => (
-                        <div
-                            key={index}
-                            className="p-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md"
-                        >
+                        <div key={index} className="p-4 mt-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md">
                             <div className="flex justify-between">
-                                <div>
-                                    <p className="font-bold">Kerusakan: {item.kerusakan}</p>
-                                    <p>Jumlah: {item.jumlah}</p>
-                                    <p>Satuan: {item.satuan}</p>
+                                <div className="w-1/2">
+                                    <p className="font-bold text-gray-700 text-md">Kerusakan</p>
+                                    <p className="text-gray-800">{item.kerusakan}</p>
                                 </div>
-                                <div className="flex space-x-2">
-                                    <button onClick={() => handleEdit(item)} className="text-blue-500">Edit</button>
-                                    <button onClick={() => handleDelete(item.id)} className="text-red-500">Delete</button>
+                                <div className="w-1/2">
+                                    <p className="font-bold text-gray-700 text-md">Jumlah</p>
+                                    <p className="text-gray-800">{item.jumlah}</p>
+                                </div>
+                                <div className="w-1/2">
+                                    <p className="font-bold text-gray-700 text-md">Satuan</p>
+                                    <p className="text-gray-800">{item.satuan}</p>
+                                </div>
+                                <div className="flex">
+                                    <button className="mr-1 text-blue-500 hover:text-blue-700" onClick={() => handleEdit(item)}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
+                                        </svg>
+                                        Edit
+                                    </button>
+                                    <button className="text-red-500 hover:text-red-700" onClick={() => handleDelete(item.id)} >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M10 3h4a1 1 0 011 1v1H9V4a1 1 0 011-1z" />
+                                        </svg>
+                                        Hapus
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     ))}
-                    <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-[190px] p-6 bg-white shadow-lg">
-                        <Link href="../sitrep" passHref>
-                            <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
-                                BACK
-                            </button>
-                        </Link>
-                        <Link href="../nextPage" passHref>
-                            <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
-                                NEXT
-                            </button>
-                        </Link>
-                    </div>
+                </div>
+                <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-[190px] p-6 bg-white shadow-lg">
+                    <Link href="../sitrep" passHref>
+                        <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
+                            BACK
+                        </button>
+                    </Link>
+                    <Link href="../lokasiterdampak" passHref>
+                        <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
+                            NEXT
+                        </button>
+                    </Link>
                 </div>
                 {message && <p className="mt-4 text-red-500">{message}</p>}
             </div>

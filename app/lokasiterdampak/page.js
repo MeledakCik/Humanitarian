@@ -1,6 +1,6 @@
 "use client";
 import Select from 'react-select';
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from 'next/link';
 import { SiTeradata } from 'react-icons/si';
@@ -9,7 +9,11 @@ export default function Sitrep() {
     const router = useRouter();
     const { id } = useParams();
     const [dataItems, setDataItems] = useState([]);
+    const [isSubmit, setIsSubmit] = useState(false)
     const [showForm, setShowForm] = useState(false);
+    const [allData, setAllData] = useState([]); // All data fetched
+    const [currentIndex, setCurrentIndex] = useState(0); // Current index for pagination
+    const containerRef = useRef(null);
     const [message, setMessage] = useState("");
     const [sitrepData, setSitrepData] = useState([]);
     const [kecamatanOptions, setKecamatanOptions] = useState([]);
@@ -109,7 +113,7 @@ export default function Sitrep() {
             const payload = {
                 kec_id: formData.kecamatan.value,
                 jumlah: formData.jumlah,
-                lokasi_site_id: formData.lokasi_site_id,
+                lokasi_site_id: siteID,
             };
 
             const response = await fetch(
@@ -122,7 +126,7 @@ export default function Sitrep() {
                     body: JSON.stringify(payload),
                 }
             );
-
+            setIsSubmit(true)
             const data = await response.json();
             if (response.ok) {
                 setMessage("Data successfully submitted.");
@@ -133,7 +137,8 @@ export default function Sitrep() {
                     lokasi_site_id: '',
                 });
                 setShowForm(false);
-                router.push(`../jumlahkorban`);
+                setIsSubmit(false)
+                // router.push(`../jumlahkorban`);
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -145,7 +150,7 @@ export default function Sitrep() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await fetch(`/api/getLokasi_terdampak?lokasi_site_id=${formData.lokasi_site_id}`);
+                const response = await fetch(`/api/getLokasi_terdampak?lokasi_site_id=${siteID}`);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const result = await response.json();
                 if (result.status) {
@@ -216,18 +221,6 @@ export default function Sitrep() {
                 {showForm && (
                     <form className="mt-[10px] bg-white rounded-lg" onSubmit={handleSubmit}>
                         <div className="mb-4">
-                            <label className="block text-[14px] font-bold text-gray-700">Dampak Site Id</label>
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    name="dampak_site_id"
-                                    value={formData.lokasi_site_id}
-                                    className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
-                                    readOnly
-                                />
-                            </div>
-                        </div>
-                        <div className="mb-4">
                             <label className="block text-[14px] font-bold text-gray-700">Jumlah*</label>
                             <input
                                 type="number"
@@ -265,9 +258,10 @@ export default function Sitrep() {
                         </div>
                     </form>
                 )}
-                <div className="mt-6 space-y-4 w-[380px] max-w-md">
+
+                <div className="mt-7 space-y-4 w-[380px] max-w-md overflow-y-auto" ref={containerRef} style={{ height: '500px', paddingBottom: '80px' }}> {/* Added padding for the fixed button */}
                     {dataItems.map((item, index) => (
-                        <div key={index} className="p-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md">
+                        <div key={index} className="p-4 mt-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md">
                             <div className="flex justify-between">
                                 <div className="w-1/2">
                                     <p className="font-bold text-gray-700 text-md">Kecamatan</p>
@@ -279,34 +273,33 @@ export default function Sitrep() {
                                 </div>
                                 <div className="flex">
                                     <button className="mr-1 text-blue-500 hover:text-blue-700" onClick={() => handleEdit(item)}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m0 0l3-3m-3 3l3 3" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
                                         </svg>
+                                        Edit
                                     </button>
-                                    <button
-                                        onClick={() => handleDelete(item.id)}
-                                        className="text-red-500 hover:text-red-700"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    <button className="text-red-500 hover:text-red-700" onClick={() => handleDelete(item.id)} >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M10 3h4a1 1 0 011 1v1H9V4a1 1 0 011-1z" />
                                         </svg>
+                                        Hapus
                                     </button>
                                 </div>
                             </div>
                         </div>
                     ))}
-                    <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-[190px] p-6 bg-white shadow-lg">
-                        <Link href="../sitrep" passHref>
-                            <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
-                                BACK
-                            </button>
-                        </Link>
-                        <Link href="../nextPage" passHref>
-                            <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
-                                NEXT
-                            </button>
-                        </Link>
-                    </div>
+                </div>
+                <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-[190px] p-6 bg-white shadow-lg">
+                    <Link href="../sitrep" passHref>
+                        <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
+                            BACK
+                        </button>
+                    </Link>
+                    <Link href="../jumlahkorban" passHref>
+                        <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
+                            NEXT
+                        </button>
+                    </Link>
                 </div>
                 {message && (
                     <p className="mt-4 text-red-600 font-bold">{message}</p>

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from 'next/link';
 
@@ -9,6 +9,9 @@ export default function Sitrep() {
     const [dataItems, setDataItems] = useState([]);
     const [isSubmit, setIsSubmit] = useState(false)
     const [showForm, setShowForm] = useState(false);
+    const [allData, setAllData] = useState([]); // All data fetched
+    const [currentIndex, setCurrentIndex] = useState(0); // Current index for pagination
+    const containerRef = useRef(null);
     const [storedKorbanSiteId, setStoredKorbanSiteId] = useState(localStorage.getItem('dampak_site_id') || null);
     const [message, setMessage] = useState([]);
     const [formData, setFormData] = useState({
@@ -108,13 +111,12 @@ export default function Sitrep() {
             if (response.ok) {
                 setMessage("Data successfully submitted.");
                 setFormData({
-                    id: '',
                     jumlah: '',
                     lokasipengungsian: '',
-                    pengungsi_site_id: ''
+                    pengungsi_site_id: id
                 });
                 setShowForm(false);
-                router.push(`../kebutuhanmendesak`);
+                // router.push(`../kebutuhanmendesak`);
                 setIsSubmit(false)
 
             } else {
@@ -153,7 +155,7 @@ export default function Sitrep() {
             <div className="flex flex-col items-center bg-white">
                 <nav className="w-full bg-[#ff6b00] p-6 shadow-b-lg">
                     <div className="flex mt-[10px] justify-center">
-                        <p className="text-white font-bold text-[22px]">Pengungsian</p>
+                        <p className="text-white font-bold text-[22px]">Pengungsi</p>
                     </div>
                 </nav>
                 <div className="w-[380px] max-w-md mt-4">
@@ -175,18 +177,6 @@ export default function Sitrep() {
 
                     {showForm && (
                         <div className="mt-[10px] bg-white rounded-lg" onSubmit={handleSubmit}>
-                            <div className="mb-4">
-                                <label className="block text-[14px] font-bold text-gray-700">Pengungsian Site ID*</label>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        name="pengungsi_site_id"
-                                        value={formData.pengungsi_site_id}
-                                        className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
-                                        readOnly
-                                    />
-                                </div>
-                            </div>
                             <div className="mb-4">
                                 <label className="block text-[14px] font-bold text-gray-700">Lokasi Pengungsian*</label>
                                 <div className="relative">
@@ -230,12 +220,9 @@ export default function Sitrep() {
                     )}
                 </div>
 
-                <div className="mt-6 space-y-4 w-[380px] max-w-md">
+                <div className="mt-7 space-y-4 w-[380px] max-w-md overflow-y-auto" ref={containerRef} style={{ height: '500px', paddingBottom: '80px' }}> {/* Added padding for the fixed button */}
                     {dataItems.map((item, index) => (
-                        <div
-                            key={index}
-                            className="p-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md"
-                        >
+                        <div key={index} className="p-4 mt-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md">
                             <div className="flex justify-between">
                                 <div className="w-1/2">
                                     <p className="font-bold text-gray-700 text-md">Lokasi Pengungsian</p>
@@ -262,18 +249,18 @@ export default function Sitrep() {
                             </div>
                         </div>
                     ))}
-                    <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-[190px] p-6 bg-white shadow-lg">
-                        <Link href="../sitrep" passHref>
-                            <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
-                                BACK
-                            </button>
-                        </Link>
-                        <Link href="../nextPage" passHref>
-                            <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
-                                NEXT
-                            </button>
-                        </Link>
-                    </div>
+                </div>
+                <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-[190px] p-6 bg-white shadow-lg">
+                    <Link href="../sitrep" passHref>
+                        <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
+                            BACK
+                        </button>
+                    </Link>
+                    <Link href="../kebutuhanmendesak" passHref>
+                        <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
+                            NEXT
+                        </button>
+                    </Link>
                 </div>
             </div>
         </>
