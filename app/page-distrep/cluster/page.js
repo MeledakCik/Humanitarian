@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from 'next/link';
 import Select from "react-select";
@@ -8,15 +8,20 @@ export default function Sitrep() {
     const router = useRouter();
     const { id } = useParams();
     const [dataItems, setDataItems] = useState([]);
+    const [isSubmit, setIsSubmit] = useState(false)
     const [showForm, setShowForm] = useState(false);
-    const [message, setMessage] = useState("");
+    const [allData, setAllData] = useState([]); // All data fetched
+    const [currentIndex, setCurrentIndex] = useState(0); // Current index for pagination
+    const containerRef = useRef(null);
+    const [storedKorbanSiteId, setStoredKorbanSiteId] = useState(localStorage.getItem('mitra_dist_id') || null);
+    const [message, setMessage] = useState([]);
     const [formData, setFormData] = useState({
         id: '',
         cluster: '',
         program: '',
         jumlah: '',
         satuan: '',
-        cluster_dist_id: id,
+        cluster_dist_id: storedKorbanSiteId,
     });
 
     const clusterOptions = [
@@ -47,31 +52,36 @@ export default function Sitrep() {
             jumlah: item.jumlah,
             satuan: item.satuan,
             program: item.program,
-            cluster_dist_id: item.cluster_dist_id,
+            cluster_dist_id: storedKorbanSiteId,
         });
         setShowForm(true);
     };
 
     useEffect(() => {
-        setFormData((prevFormData) => ({
-            ...prevFormData,
-            cluster_dist_id: id,
-        }));
+        if (storedKorbanSiteId) {
+            setFormData((prevData) => ({
+                ...prevData,
+                cluster_dist_id: storedKorbanSiteId,
+            }));
+        } else if (id) {
+            // Store the current id in localStorage for future use
+            localStorage.setItem('dampak_site_id', id);
+            setFormData((prevData) => ({
+                ...prevData,
+                cluster_dist_id: id,
+            }));
+        }
     }, [id]);
+
 
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await fetch(`/api/getCluster?cluster_dist_id=${id}`);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                const response = await fetch(`/api/getCluster?cluster_dist_id=${storedKorbanSiteId}`);
+                if (!response.ok) throw new Error('Network response was not ok');
                 const result = await response.json();
-
-                if (result.status && result.data) {
-                    const filteredData = result.data.filter(item => item.cluster_dist_id === parseInt(id));
-
-                    const fetchedData = filteredData.map((item) => ({
+                if (result.status) {
+                    const fetchedData = result.data.map((item) => ({
                         id: item.id || "Data tidak ada",
                         cluster: item.cluster || "Data tidak ada",
                         program: item.program || "Data tidak ada",
@@ -88,10 +98,7 @@ export default function Sitrep() {
             }
         }
         fetchData();
-
-        const intervalId = setInterval(fetchData, 3000);
-        return () => clearInterval(intervalId);
-    }, [id]);
+    }, [storedKorbanSiteId, isSubmit]);
 
     const handleDelete = async (itemId) => {
         if (!itemId) {
@@ -116,36 +123,53 @@ export default function Sitrep() {
         }
     };
 
-    const handleSubmit = async () => {
-        const url = formData.id ? `/api/updateCluster?id=${formData.id}` : "/api/createCluster";
-        const method = formData.id ? "POST" : "POST";
-
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         try {
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(formData),
-            });
+            const payload = {
+                id: formData.id,
+                cluster: formData.cluster,
+                jumlah: formData.jumlah,
+                satuan: formData.satuan,
+                program: formData.program,
+                cluster_dist_id: storedKorbanSiteId,
+            };
 
-            if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+            const response = await fetch(
+                formData.id ? "/api/updateCluster" : "/api/createCluster",
+                {
+                    method: formData.id ? "POST" : "POST", // gunakan PUT untuk update
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                }
+            );
+            isSubmit(true)
+
             const data = await response.json();
-
-            if (formData.id) {
-                setDataItems((prevItems) =>
-                    prevItems.map((item) => (item.id === formData.id ? data : item))
-                );
+            if (response.ok) {
+                setMessage("Data berhasil disimpan.");
+                setFormData({
+                    id: '',
+                    cluster: '',
+                    jumlah: '',
+                    satuan: '',
+                    program: '',
+                    cluster_dist_id: storedKorbanSiteId,
+                });
+                setShowForm(false);
+                setIsSubmit(false);
+                // Mengambil ulang data setelah submit
+                await fetchData(); // Memanggil ulang fungsi fetchData
             } else {
-                setDataItems((prevItems) => [...prevItems, data]);
+                setMessage(`Error: ${data.message || "Submission failed"}`);
             }
-
-            setMessage("Data berhasil disimpan.");
-            setShowForm(false);
         } catch (error) {
             setMessage(`Error: ${error.message}`);
         }
     };
+
 
     const selectStyles = {
         control: (base) => ({
@@ -263,30 +287,25 @@ export default function Sitrep() {
                             key={index}
                             className="p-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md space-y-3"
                         >
-                            {/* Grid layout for consistent alignment */}
                             <div className="grid grid-cols-3 gap-4">
                                 <div>
                                     <p className="font-bold text-gray-700">Cluster</p>
-                                    <p className="text-gray-800 truncate" title={item.cluster}>{item.cluster}</p>
+                                    <p className="text-gray-800 truncate">{item.cluster}</p>
                                 </div>
                                 <div>
                                     <p className="font-bold text-gray-700">Jumlah</p>
-                                    <p className="text-gray-800 truncate" title={item.jumlah}>{item.jumlah}</p>
-                                </div>
-                                <div>
-                                    <p className="font-bold text-gray-700">Distribution</p>
-                                    <p className="text-gray-800 truncate" title={item.cluster_dist_id}>{item.cluster_dist_id}</p>
+                                    <p className="text-gray-800 truncate">{item.jumlah}</p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
                                 <div>
                                     <p className="font-bold text-gray-700">Satuan</p>
-                                    <p className="text-gray-800 truncate" title={item.satuan}>{item.satuan}</p>
+                                    <p className="text-gray-800 truncate">{item.satuan}</p>
                                 </div>
                                 <div>
                                     <p className="font-bold text-gray-700">Program</p>
-                                    <p className="text-gray-800 truncate" title={item.program}>{item.program}</p>
+                                    <p className="text-gray-800 truncate">{item.program}</p>
                                 </div>
                                 <div>
                                     {/* Empty div to keep alignment */}
@@ -321,13 +340,14 @@ export default function Sitrep() {
                                 BACK
                             </button>
                         </Link>
-                        <Link href="../nextPage" passHref>
+                        <Link href="../distrep" passHref>
                             <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
                                 NEXT
                             </button>
                         </Link>
                     </div>
                 </div>
+                {message && <p className="mt-4 text-red-500">{message}</p>}
             </div>
         </div >
     );

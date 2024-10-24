@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import dynamic from 'next/dynamic';
@@ -6,6 +7,7 @@ import dynamic from 'next/dynamic';
 const Select = dynamic(() => import('react-select'), { ssr: false });
 
 export default function Sitrep() {
+    const router = useRouter();
     const initialFormData = {
         id: '',
         spk: '',
@@ -212,7 +214,7 @@ export default function Sitrep() {
             const data = await response.json();
             if (response.ok) {
                 setMessage("Data berhasil dikirim.");
-                router.push(`../mitra/${data.ID}`);
+                router.push(`./../mitra/${data.ID}`);
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from 'next/link';
 
@@ -7,7 +7,11 @@ export default function Sitrep() {
     const router = useRouter();
     const { id } = useParams();
     const [dataItems, setDataItems] = useState([]);
+    const [allData, setAllData] = useState([]); // All data fetched
+    const [currentIndex, setCurrentIndex] = useState(0); // Current index for pagination
+    const containerRef = useRef(null);
     const [showForm, setShowForm] = useState(false);
+    const [storedKorbanSiteId, setStoredKorbanSiteId] = useState(localStorage.getItem('mitra_dist_id') || null);
     const [message, setMessage] = useState("");
     const [formData, setFormData] = useState({
         id: '',
@@ -15,21 +19,18 @@ export default function Sitrep() {
         mitra_dist_id: id || ""
     });
 
+    useEffect(() => {
+        localStorage.setItem('mitra_dist_id', id);
+    }, [id]);
+
     const handleEdit = (item) => {
         setFormData({
             id: item.id,
             mitra: item.mitra,
-            mitra_dist_id: item.mitra_dist_id
+            mitra_dist_id: storedKorbanSiteId
         });
         setShowForm(true);
     };
-
-    useEffect(() => {
-        setFormData((prevFormData) => ({
-            ...prevFormData,
-            mitra_dist_id: id,
-        }));
-    }, [id]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -50,16 +51,17 @@ export default function Sitrep() {
                     body: JSON.stringify(payload),
                 }
             );
-
+            setIsSubmit(true)
             const data = await response.json();
             if (response.ok) {
                 setMessage("Data berhasil disimpan.");
                 setFormData({
                     id: '',
                     mitra: "",
-                    mitra_dist_id: id || ""
+                    mitra_dist_id: id
                 });
                 setShowForm(false);
+                setIsSubmit(false)
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }
@@ -161,18 +163,6 @@ export default function Sitrep() {
                                 className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
                             />
                         </div>
-
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700">Distribution*</label>
-                            <input
-                                type="text"
-                                name="mitra_dist_id"
-                                value={formData.mitra_dist_id}
-                                readOnly
-                                className="mt-1 block w-full p-2 border border-orange-500 rounded-md focus:outline-none"
-                            />
-                        </div>
-
                         <div className="flex justify-between">
                             <Link href="../sitrep" passHref>
                                 <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
@@ -201,12 +191,6 @@ export default function Sitrep() {
                                     <p className="font-bold text-gray-700 text-md">Mitra</p>
                                     <p className="text-gray-800">{item.mitra}</p>
                                 </div>
-                            </div>
-                            <div className="flex justify-between">
-                                <div className="mt-4">
-                                    <p className="font-bold text-gray-700 text-md">Distribution</p>
-                                    <p className="text-gray-800">{item.mitra_dist_id || "Tidak ada data / belum diisi"}</p>
-                                </div>
                                 <div className="flex mt-4">
                                     <button className="mr-4 text-blue-500 hover:text-blue-700" onClick={() => handleEdit(item)}>
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
@@ -230,7 +214,7 @@ export default function Sitrep() {
                                 BACK
                             </button>
                         </Link>
-                        <Link href="../nextPage" passHref>
+                        <Link href="../cluster" passHref>
                             <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
                                 NEXT
                             </button>
