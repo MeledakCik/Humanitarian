@@ -65,7 +65,7 @@ export default function Sitrep() {
             }));
         } else if (id) {
             // Store the current id in localStorage for future use
-            localStorage.setItem('dampak_site_id', id);
+            localStorage.setItem('mitra_dist_id', id);
             setFormData((prevData) => ({
                 ...prevData,
                 cluster_dist_id: id,
@@ -338,7 +338,7 @@ export default function Sitrep() {
                                 BACK
                             </button>
                         </Link>
-                        <Link href="../distrep" passHref>
+                        <Link href="./dockumentdis" passHref>
                             <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
                                 NEXT
                             </button>
