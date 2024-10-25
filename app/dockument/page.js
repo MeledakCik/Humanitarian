@@ -20,7 +20,6 @@ export default function Sitrep() {
         dok_site_id: ''
     });
 
-    // Fetch korban_site_id from localStorage
     useEffect(() => {
         if (storedKorbanSiteId) {
             setFormData((prevData) => ({
@@ -28,7 +27,6 @@ export default function Sitrep() {
                 dok_site_id: storedKorbanSiteId,
             }));
         } else if (id) {
-            // Store the current id in localStorage for future use
             localStorage.setItem('dampak_site_id', id);
             setFormData((prevData) => ({
                 ...prevData,
@@ -66,7 +64,7 @@ export default function Sitrep() {
                     sitrep_dokumentasi: '',
                     dok_site_id: id,
                 });
-                setSelectedImage(null); // Clear image preview
+                setSelectedImage(null);
                 setShowForm(false);
                 setIsSubmit(false);
             } else {
@@ -83,10 +81,10 @@ export default function Sitrep() {
             const reader = new FileReader();
             reader.onloadend = () => {
                 const base64String = reader.result;
-                setSelectedImage(base64String); // Pratinjau Gambar
-                setFormData({ ...formData, sitrep_dokumentasi: base64String }); // Simpan gambar dalam format base64
+                setSelectedImage(base64String);
+                setFormData({ ...formData, sitrep_dokumentasi: base64String });
             };
-            reader.readAsDataURL(file); // Konversi gambar ke base64
+            reader.readAsDataURL(file);
         }
     };
 
@@ -97,12 +95,12 @@ export default function Sitrep() {
                     const response = await fetch(`/api/getDok?dok_site_id=${storedKorbanSiteId}`);
                     if (!response.ok) throw new Error('Network response was not ok');
                     const result = await response.json();
-                    console.log(result, 'agus')
+                    console.log(result, 'agus');
                     if (result.status) {
                         const fetchedData = result.data.map((item) => ({
                             id: item.id || "Data tidak ada",
                             dok_site_id: item.dok_site_id || "Data tidak ada",
-                            sitrep_dokumentasi: item.sitrep_dokumentasi || "Data tidak ada"
+                            base64_sitrep_dokumentasi: item.base64_sitrep_dokumentasi || "Data tidak ada" // Use the correct key
                         }));
                         setDataItems(fetchedData);
                     } else {
@@ -139,21 +137,18 @@ export default function Sitrep() {
         });
         setShowForm(true);
     };
+
     const convertBase64ToImage = (base64) => {
         if (!base64) return '';
-        if (base64.startsWith('data:image/png;base64,')) {
-            return base64; // Sudah PNG
-        } else if (base64.startsWith('data:image/jpeg;base64,')) {
-            return base64; // Sudah JPEG
-        } else if (base64.startsWith('data:image/webp;base64,')) {
-            return base64; // Sudah WEBP
+        if (base64.startsWith('data:image/')) {
+            return base64; // Already has data URI format
         } else if (base64.startsWith('iVBORw0KGgo')) {
-            return `data:image/png;base64,${base64}`;
+            return `data:image/png;base64,${base64}`; // PNG prefix
         } else if (base64.startsWith('/9j/')) {
-            return `data:image/jpeg;base64,${base64}`;
+            return `data:image/jpeg;base64,${base64}`; // JPEG prefix
         } else {
-            console.warn('Format gambar tidak dikenali:', base64); // Log string base64 yang tidak dikenali
-            return ''; // Atau tambahkan pesan default
+            console.warn('Format gambar tidak dikenali:', base64);
+            return ''; // Unrecognized format
         }
     };
 
@@ -211,10 +206,9 @@ export default function Sitrep() {
                         <div key={index} className="p-4 mt-4 bg-orange-100 border border-orange-500 rounded-lg shadow-md">
                             <div className="flex justify-between">
                                 <div className="w-1/2">
-                                    <p className="font-bold text-gray-700 text-md">Dokumentasi Bencana Alam</p>
-                                    {item.sitrep_dokumentasi ? (
+                                    {item.base64_sitrep_dokumentasi ? (
                                         <img
-                                            src={convertBase64ToImage(item.sitrep_dokumentasi)}
+                                            src={convertBase64ToImage(item.base64_sitrep_dokumentasi)}
                                             alt="Dokumentasi Bencana Alam"
                                             className="w-full h-auto mt-2 rounded-md"
                                         />
@@ -222,41 +216,40 @@ export default function Sitrep() {
                                         <p className="text-gray-800">No Image Available</p>
                                     )}
                                 </div>
-
                                 <div className="flex">
                                     <button className="mr-1 text-blue-500 hover:text-blue-700" onClick={() => handleEdit(item)}>
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-4M16 3h-4v2h4V3z" />
                                         </svg>
-                                        Edit
                                     </button>
                                     <button className="text-red-500 hover:text-red-700" onClick={() => handleDelete(item.id)} >
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-7 7-7-7" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M10 3h4a1 1 0 011 1v1H9V4a1 1 0 011-1z" />
                                         </svg>
-                                        Delete
                                     </button>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
+                <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-[190px] p-6 bg-white shadow-lg">
+                    <Link href="../sitrep" passHref>
+                        <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
+                            BACK
+                        </button>
+                    </Link>
+                    <Link href="../sitrep" passHref>
+                        <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
+                            NEXT
+                        </button>
+                    </Link>
+                </div>
 
                 {message && (
-                    <p className="mt-4 text-center text-red-600 font-semibold">{message}</p>
+                    <p className="mt-4 text-center text-green-500 font-bold">
+                        {message}
+                    </p>
                 )}
-            </div>
-            <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-[190px] p-6 bg-white shadow-lg">
-                <Link href="../sitrep" passHref>
-                    <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
-                        BACK
-                    </button>
-                </Link>
-                <Link href="../sitrep" passHref>
-                    <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
-                        NEXT
-                    </button>
-                </Link>
             </div>
         </div>
     );
