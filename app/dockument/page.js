@@ -97,7 +97,7 @@ export default function Sitrep() {
                     const response = await fetch(`/api/getDok?dok_site_id=${storedKorbanSiteId}`);
                     if (!response.ok) throw new Error('Network response was not ok');
                     const result = await response.json();
-                    console.log(result,'agus')
+                    console.log(result, 'agus')
                     if (result.status) {
                         const fetchedData = result.data.map((item) => ({
                             id: item.id || "Data tidak ada",
@@ -245,6 +245,18 @@ export default function Sitrep() {
                 {message && (
                     <p className="mt-4 text-center text-red-600 font-semibold">{message}</p>
                 )}
+            </div>
+            <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-[190px] p-6 bg-white shadow-lg">
+                <Link href="../sitrep" passHref>
+                    <button className="w-[100px] h-[40px] bg-white border border-orange-500 font-bold text-black rounded-lg">
+                        BACK
+                    </button>
+                </Link>
+                <Link href="../sitrep" passHref>
+                    <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
+                        NEXT
+                    </button>
+                </Link>
             </div>
         </div>
     );
