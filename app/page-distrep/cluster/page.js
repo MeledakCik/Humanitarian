@@ -160,8 +160,6 @@ export default function Sitrep() {
                 });
                 setShowForm(false);
                 setIsSubmit(false);
-                // Mengambil ulang data setelah submit
-                await fetchData(); // Memanggil ulang fungsi fetchData
             } else {
                 setMessage(`Error: ${data.message || "Submission failed"}`);
             }

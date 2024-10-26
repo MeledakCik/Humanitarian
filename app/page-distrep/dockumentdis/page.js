@@ -92,10 +92,9 @@ export default function Sitrep() {
         async function fetchData() {
             if (storedKorbanSiteId) {
                 try {
-                    const response = await fetch(`/api/getDokDist?dok_dist_id=${storedKorbanSiteId}`);
+                    const response = await fetch(`/api/getDokDist`);
                     if (!response.ok) throw new Error('Network response was not ok');
                     const result = await response.json();
-                    console.log(result, 'agus');
                     if (result.status) {
                         const fetchedData = result.data.map((item) => ({
                             id: item.id || "Data tidak ada",

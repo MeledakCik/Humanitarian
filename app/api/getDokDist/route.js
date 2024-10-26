@@ -30,7 +30,7 @@ export async function GET(req) {
         // Cek apakah data valid dan lakukan filter berdasarkan kebutuhan_site_id jika tersedia
         if (data && data.status && Array.isArray(data.data)) {
             const filteredData = dokSiteId
-                ? data.data.filter((item) => item.dok_site_id == dokSiteId)
+                ? data.data.filter((item) => item.dok_dist_id == dokSiteId)
                 : data.data;
 
             return new Response(JSON.stringify({ status: true, data: filteredData }), {
