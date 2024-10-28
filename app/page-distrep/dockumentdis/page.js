@@ -92,7 +92,7 @@ export default function Sitrep() {
         async function fetchData() {
             if (storedKorbanSiteId) {
                 try {
-                    const response = await fetch(`/api/getDokDist`);
+                    const response = await fetch(`/api/getDokDist?dok_dist_id=${storedKorbanSiteId}`);
                     if (!response.ok) throw new Error('Network response was not ok');
                     const result = await response.json();
                     if (result.status) {
@@ -237,7 +237,7 @@ export default function Sitrep() {
                             BACK
                         </button>
                     </Link>
-                    <Link href="../distrep" passHref>
+                    <Link href="../page-distrep/distrep" passHref>
                         <button className="w-[100px] h-[40px] bg-orange-500 text-white font-bold rounded-lg">
                             NEXT
                         </button>
