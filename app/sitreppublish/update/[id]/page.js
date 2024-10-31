@@ -1,12 +1,14 @@
 "use client";
 import { useRouter, useParams } from 'next/navigation';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Select from "react-select";
 
 export default function Sitrep() {
     const router = useRouter();
     const { id } = useParams();
+    const containerRef = useRef(null);
+    const [isSuccess, setIsSuccess] = useState(false);
 
     const [formData, setFormData] = useState({
         date: "",
@@ -44,6 +46,38 @@ export default function Sitrep() {
     const [kelurahanOptions, setKelurahanOptions] = useState([]);
     const [valueKelurahan, setValueKelurahan] = useState(null);
     const [kelurahanKel, setKelurahanKel] = useState(null);
+
+    const handleUpdateData = async (e, formData) => {
+        try {
+            e.preventDefault();
+            const payload = {
+                tanggal_kejadian: formData.date,
+                nama_kejadian: formData.eventName,
+                jenis_kejadian_id: formData.jenis_kejadian,
+                pic_id: formData.pic,
+                province_id: formData.provinsi,
+                city_id: formData.kota,
+                district_id: formData.kecamatan,
+                sub_district_id: formData.kelurahan,
+                alamat_lengkap: formData.address
+            }
+            const response = await fetch(`/api/updateSitrep?id=${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            if (response.ok) {
+                setIsSuccess(true);
+                console.log("Data berhasil diperbarui");
+            } else {
+                console.error("Gagal memperbarui data");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    };
 
     useEffect(() => {
         const fetchJenisKejadian = async () => {
@@ -112,6 +146,43 @@ export default function Sitrep() {
     }, []);
 
     useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await fetch(`/api/getDok?dok_site_id=${id}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const result = await response.json();
+                if (result.status) {
+                    const fetchedData = result.data.map((item) => ({
+                        id: item.id || "Data tidak ada",
+                        dok_site_id: item.dok_site_id || "Data tidak ada",
+                        base64_sitrep_dokumentasi: item.base64_sitrep_dokumentasi || "Data tidak ada" // Use the correct key
+                    }));
+                    setDataItems(fetchedData);
+                } else {
+                    console.error("Data tidak tersedia");
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        }
+        fetchData();
+    }, []);
+
+    const convertBase64ToImage = (base64) => {
+        if (!base64) return '';
+        if (base64.startsWith('data:image/')) {
+            return base64; // Already has data URI format
+        } else if (base64.startsWith('iVBORw0KGgo')) {
+            return `data:image/png;base64,${base64}`; // PNG prefix
+        } else if (base64.startsWith('/9j/')) {
+            return `data:image/jpeg;base64,${base64}`; // JPEG prefix
+        } else {
+            console.warn('Format gambar tidak dikenali:', base64);
+            return ''; // Unrecognized format
+        }
+    };
+
+    useEffect(() => {
         if (formData.provinsi) {
             const fetchKota = async () => {
                 try {
@@ -166,10 +237,10 @@ export default function Sitrep() {
             fetchKecamatan();
         } else {
             setKecamatanOptions([]);
-            setValueKecamatan(null); // Reset valueCity saat provinsi kosong
+            setValueKecamatan(null);
         }
     }, [formData.kota]);
-    
+
     useEffect(() => {
         if (formData.kecamatan) {
             const fetchKelurahan = async () => {
@@ -216,7 +287,6 @@ export default function Sitrep() {
                     }));
                     setDataItems(fetchedData);
                 } else {
-                    console.error("Data tidak tersedia");
                 }
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -226,7 +296,7 @@ export default function Sitrep() {
         fetchData();
     }, []);
 
-    const handleInputChange = (field, value) => {
+    const handleInputChange = (currentPage, field, value) => {
         if (field === "provinsi") {
             const selectedProvinsi = provinsiOptions.find((option) => option.value === value);
             setProvinsi(selectedProvinsi);
@@ -291,6 +361,16 @@ export default function Sitrep() {
             setFormData((prevData) => ({
                 ...prevData,
                 date: value, // Update formData state with selected date
+            }));
+        } else if (field === "address") { // Handling the date input
+            setFormData((prevData) => ({
+                ...prevData,
+                [field]: value, // Update formData state with selected date
+            }));
+        } else if (currentPage === "eventName") { // Handling the date input
+            setFormData((prevData) => ({
+                ...prevData,
+                eventName: value, // Update formData state with selected date
             }));
         }
     };
@@ -370,6 +450,7 @@ export default function Sitrep() {
             <div className="flex flex-col w-[380px] max-w-md">
                 <form
                     className="bg-white mt-5"
+                // onSubmit={handleUpdateData(formData)}
                 >
                     <div className="mb-4">
                         <p className="mb-2">Tanggal</p>
@@ -466,7 +547,31 @@ export default function Sitrep() {
                             className="border rounded w-full py-2 px-3 mb-2"
                         />
                     </div>
-                    <div className="flex flex-row justify-between">
+                    {isSuccess && (
+                        <div className="text-green p-2 rounded mb-4 text-center">
+                            Data berhasil diperbarui
+                        </div>
+                    )}
+                    <div className="mt-3 overflow-y-auto" ref={containerRef} style={{ height: '400px', paddingBottom: '80px' }}>
+                        {dataItems.map((item, index) => (
+                            <div key={index} className="p-2">
+                                <div className="flex justify-between">
+                                    <div className="w-full">
+                                        {item.base64_sitrep_dokumentasi ? (
+                                            <img
+                                                src={convertBase64ToImage(item.base64_sitrep_dokumentasi)}
+                                                alt="Dokumentasi Bencana Alam"
+                                                className="w-full h-auto rounded-md"
+                                            />
+                                        ) : (
+                                            <p className="text-gray-800"></p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex flex-row justify-between mb-4">
                         <a href="./sitrep">
                             <button
                                 type="button"
@@ -475,10 +580,18 @@ export default function Sitrep() {
                                 BACK
                             </button>
                         </a>
+                        <Link href={`/damsarpras/${id}`} passHref>
+                            <button
+                                type="button"
+                                className="bg-orange-500 text-white py-2 px-6 font-bold rounded"
+                            >
+                                NEXT
+                            </button>
+                        </Link>
                         <button
                             className="bg-orange-500 text-white py-2 px-6 font-bold rounded"
-                        >
-                            SAVE
+                            onClick={(e) => handleUpdateData(e, formData)}>
+                            UPDATE
                         </button>
                     </div>
                 </form>

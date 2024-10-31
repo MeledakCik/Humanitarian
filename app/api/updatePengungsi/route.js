@@ -11,6 +11,8 @@ export async function POST(req) {
             body: JSON.stringify(requestBody),
         });
 
+        console.log(JSON.stringify(requestBody),"SI KAKANG RIPUH")
+
         // console.log(response ,"iki mid cupu")
         if (!response.ok) {
             console.error(`HTTP error! status: ${response.status}`);

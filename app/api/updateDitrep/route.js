@@ -4,9 +4,8 @@ export async function POST(req) {
         const { searchParams } = new URL(req.url);
         const requestBody = await req.json(); // Parse the JSON body
         console.log("Final payload to API:", JSON.stringify(requestBody));
-        const idSitrep = searchParams.get("id");
-        console.log('https://humanitarian1-rz-be-dev1.cnt.id/apid/update_site_report cooooyyyy')
-        const response = await fetch(`https://humanitarian1-rz-be-dev1.cnt.id/apid/update_site_report?id=${idSitrep}`,{
+        const idDitrep = searchParams.get("id");
+        const response = await fetch(`https://humanitarian1-rz-be-dev1.cnt.id/apid/update_distribution_report?id=${idDitrep}`,{
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
